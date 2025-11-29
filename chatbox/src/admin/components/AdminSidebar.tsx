@@ -16,6 +16,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onTabChange }) =
     { id: 'tickets' as AdminTab, label: 'Support Tickets', icon: '🎫' },
         { id: 'chats' as AdminTab, label: 'Customer Chats', icon: '🎫' },
         { id: 'chatflows' as AdminTab, label: 'Chat Manager', icon: '🎫' },
+         { id: 'departments' as AdminTab, label: 'Departments', icon: '🎫' },
   ];
 
   return (

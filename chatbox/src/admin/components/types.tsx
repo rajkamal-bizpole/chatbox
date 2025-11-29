@@ -25,6 +25,9 @@ export interface ApiConfig {
   endpoint?: string;
   method?: "GET" | "POST" | "PUT" | "DELETE";
   next_step_logic?: NextStepLogic;
+    issue_type?: string;
+  sub_issue?: string;
+  priority?: "low" | "medium" | "high" | "urgent";
 }
 
 /* ---- Single Step ---- */

@@ -8,9 +8,9 @@ interface StepEditorProps {
   onDelete: (key: string) => void;
 }
 
-// ---------------------
-// Reusable Delete Popup
-// ---------------------
+/* ------------------------------
+   Confirm Modal
+--------------------------------*/
 const ConfirmModal: React.FC<{
   show: boolean;
   title: string;
@@ -27,17 +27,11 @@ const ConfirmModal: React.FC<{
         <p className="text-gray-600 mb-6">{message}</p>
 
         <div className="flex justify-end gap-3">
-          <button
-            className="px-4 py-2 bg-gray-200 rounded-lg"
-            onClick={onCancel}
-          >
+          <button className="px-4 py-2 bg-gray-200 rounded-lg" onClick={onCancel}>
             Cancel
           </button>
 
-          <button
-            className="px-4 py-2 bg-red-600 text-white rounded-lg"
-            onClick={onConfirm}
-          >
+          <button className="px-4 py-2 bg-red-600 text-white rounded-lg" onClick={onConfirm}>
             Delete
           </button>
         </div>
@@ -46,10 +40,9 @@ const ConfirmModal: React.FC<{
   );
 };
 
-// ---------------------
-// Step Editor Component
-// ---------------------
-
+/* ------------------------------
+   Step Editor Component
+--------------------------------*/
 const StepEditor: React.FC<StepEditorProps> = ({
   step,
   allSteps,
@@ -59,8 +52,7 @@ const StepEditor: React.FC<StepEditorProps> = ({
   const [local, setLocal] = useState<ChatStep>({
     ...step,
     options: Array.isArray(step.options) ? step.options : [],
-    validation_rules:
-      typeof step.validation_rules === "object" ? step.validation_rules : {},
+    validation_rules: typeof step.validation_rules === "object" ? step.validation_rules : {},
     next_step_map:
       typeof step.next_step_map === "object" ? step.next_step_map : {},
     api_config: typeof step.api_config === "object" ? step.api_config : {},
@@ -68,11 +60,13 @@ const StepEditor: React.FC<StepEditorProps> = ({
 
   const [showStepDelete, setShowStepDelete] = useState(false);
   const [showOptionDelete, setShowOptionDelete] = useState(false);
-  const [optionIndexToDelete, setOptionIndexToDelete] = useState<number | null>(null);
+  const [optionIndexToDelete, setOptionIndexToDelete] = useState<number | null>(
+    null
+  );
   const [showMapDelete, setShowMapDelete] = useState(false);
   const [mapKeyToDelete, setMapKeyToDelete] = useState<string | null>(null);
 
-  /* Sync UI with parent step */
+  /* Sync props → state */
   useEffect(() => {
     setLocal({
       ...step,
@@ -81,18 +75,19 @@ const StepEditor: React.FC<StepEditorProps> = ({
         typeof step.validation_rules === "object" ? step.validation_rules : {},
       next_step_map:
         typeof step.next_step_map === "object" ? step.next_step_map : {},
-      api_config: typeof step.api_config === "object" ? step.api_config : {},
+      api_config:
+        typeof step.api_config === "object" ? step.api_config : {},
     });
   }, [step]);
 
-  /* Update wrapper */
+  /* General update */
   const updateField = (key: keyof ChatStep, value: any) => {
     const updated = { ...local, [key]: value };
     setLocal(updated);
     onUpdate(updated);
   };
 
-  /* Validation rules */
+  /* Validation Update */
   const updateValidation = (key: string, value: any) => {
     updateField("validation_rules", {
       ...local.validation_rules,
@@ -100,7 +95,7 @@ const StepEditor: React.FC<StepEditorProps> = ({
     });
   };
 
-  /* API config */
+  /* API Config Update */
   const updateApi = (key: string, value: any) => {
     updateField("api_config", {
       ...local.api_config,
@@ -108,7 +103,7 @@ const StepEditor: React.FC<StepEditorProps> = ({
     });
   };
 
-  /* Options */
+  /* Option Update */
   const updateOption = (i: number, value: string) => {
     const copy = [...local.options];
     copy[i] = value;
@@ -122,16 +117,18 @@ const StepEditor: React.FC<StepEditorProps> = ({
 
   const confirmOptionDelete = () => {
     if (optionIndexToDelete === null) return;
+
     updateField(
       "options",
       local.options.filter((_, idx) => idx !== optionIndexToDelete)
     );
+
     setShowOptionDelete(false);
   };
 
   const addOption = () => updateField("options", [...local.options, ""]);
 
-  /* Next step map */
+  /* Next Step Map */
   const updateNextMap = (key: string, value: string) => {
     updateField("next_step_map", {
       ...local.next_step_map,
@@ -146,19 +143,21 @@ const StepEditor: React.FC<StepEditorProps> = ({
 
   const confirmMapDelete = () => {
     if (!mapKeyToDelete) return;
-    const updated = { ...local.next_step_map };
-    delete updated[mapKeyToDelete];
-    updateField("next_step_map", updated);
+
+    const clone = { ...local.next_step_map };
+    delete clone[mapKeyToDelete];
+
+    updateField("next_step_map", clone);
     setShowMapDelete(false);
   };
 
   return (
     <>
-      {/* Delete Popups */}
+      {/* Modals */}
       <ConfirmModal
         show={showStepDelete}
         title="Delete Step?"
-        message={`Are you sure you want to delete step "${local.step_key}"?`}
+        message={`Are you sure you want to delete "${local.step_key}"?`}
         onConfirm={() => onDelete(local.step_key)}
         onCancel={() => setShowStepDelete(false)}
       />
@@ -173,13 +172,13 @@ const StepEditor: React.FC<StepEditorProps> = ({
 
       <ConfirmModal
         show={showMapDelete}
-        title="Delete Next Step Mapping?"
-        message={`Are you sure you want to delete mapping "${mapKeyToDelete}"?`}
+        title="Delete Mapping?"
+        message={`Remove mapping for: ${mapKeyToDelete}`}
         onConfirm={confirmMapDelete}
         onCancel={() => setShowMapDelete(false)}
       />
 
-      {/* Editor UI */}
+      {/* Main UI */}
       <div className="bg-white border rounded-lg p-6 shadow-sm">
         <div className="flex justify-between mb-6">
           <h2 className="text-lg font-semibold">Step Editor</h2>
@@ -205,7 +204,7 @@ const StepEditor: React.FC<StepEditorProps> = ({
             </div>
 
             <div>
-              <label className="font-medium text-sm">Type</label>
+              <label className="font-medium text-sm">Type *</label>
               <select
                 value={local.step_type}
                 onChange={(e) => updateField("step_type", e.target.value)}
@@ -219,7 +218,7 @@ const StepEditor: React.FC<StepEditorProps> = ({
             </div>
           </div>
 
-          {/* Message Text */}
+          {/* Message */}
           <div>
             <label className="font-medium text-sm">Message Text *</label>
             <textarea
@@ -230,10 +229,11 @@ const StepEditor: React.FC<StepEditorProps> = ({
             />
           </div>
 
-          {/* Options */}
-          {local.step_type === "options" && (
+          {/* Options (OPTIONS + API_CALL) */}
+          {(local.step_type === "options" ||
+            local.step_type === "api_call") && (
             <div>
-              <label className="font-medium text-sm">Options *</label>
+              <label className="font-medium text-sm">Options</label>
 
               <div className="space-y-2 mt-2">
                 {local.options.map((option, i) => (
@@ -243,6 +243,7 @@ const StepEditor: React.FC<StepEditorProps> = ({
                       onChange={(e) => updateOption(i, e.target.value)}
                       className="flex-1 p-2 border rounded-lg"
                     />
+
                     <button
                       className="bg-red-500 text-white px-3 rounded-lg"
                       onClick={() => requestOptionDelete(i)}
@@ -265,16 +266,14 @@ const StepEditor: React.FC<StepEditorProps> = ({
           {/* Validation */}
           {local.step_type === "input" && (
             <div>
-              <label className="font-medium text-sm">Validation Rules</label>
+              <label className="font-medium text-sm">Validation</label>
 
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <div>
                   <label className="text-xs">Pattern</label>
                   <input
                     value={local.validation_rules.pattern || ""}
-                    onChange={(e) =>
-                      updateValidation("pattern", e.target.value)
-                    }
+                    onChange={(e) => updateValidation("pattern", e.target.value)}
                     className="w-full p-2 border rounded-lg"
                   />
                 </div>
@@ -294,78 +293,134 @@ const StepEditor: React.FC<StepEditorProps> = ({
           )}
 
           {/* API Config */}
-          {/* API Config */}
-{local.step_type === "api_call" && (
-  <div>
-    <label className="font-medium text-sm">API Config</label>
+          {local.step_type === "api_call" && (
+            <div>
+              <label className="font-medium text-sm">API Config</label>
 
-    <div className="space-y-3 mt-2">
-      {/* Endpoint Select */}
-      <div>
-        <label className="text-xs">Endpoint URL</label>
+              <div className="space-y-3 mt-2">
+                {/* Endpoint */}
+                <div>
+                  <label className="text-xs">Endpoint URL</label>
 
-    <select
-  className="w-full p-2 border rounded-lg mb-2"
-  value={
-    [
-      "/api/chat/validate-email",
-      "/api/chat/validate-phone",
-      "/api/chat/ticket/create"        // <-- ADD THIS LINE
-    ].includes(local.api_config.endpoint ?? "")
-      ? (local.api_config.endpoint ?? "")
-      : "custom"
-  }
-  onChange={(e) => {
-    const value = e.target.value;
-    if (value === "custom") return;
-    updateApi("endpoint", value);
-  }}
->
-  <option value="">Select API Endpoint</option>
-  <option value="/api/chat/validate-email">Validate Email API</option>
-  <option value="/api/chat/validate-phone">Validate Phone API</option>
-  <option value="/api/chat/ticket/create">Create Support Ticket</option>  {/* <-- ADD */}
-  <option value="custom">Custom URL</option>
-</select>
+                  <select
+                    className="w-full p-2 border rounded-lg mb-2"
+                    value={
+                      [
+                        "/api/chat/validate-email",
+                        "/api/chat/validate-phone",
+                        "/api/chat/ticket/create",
+                        "/api/department/billing",
+                        "/api/department/technical",
+                        "/api/department/accounts",
+                        "/api/department/compliance",
+                      ].includes(local.api_config.endpoint ?? "")
+                        ? local.api_config.endpoint
+                        : "custom"
+                    }
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === "custom") return;
+                      updateApi("endpoint", v);
+                    }}
+                  >
+                    <option value="">Select API</option>
+                    <option value="/api/chat/validate-email">
+                      Validate Email API
+                    </option>
+                    <option value="/api/chat/validate-phone">
+                      Validate Phone API
+                    </option>
+                    <option value="/api/chat/ticket/create">
+                      Create Support Ticket
+                    </option>
 
+                    {/* EXTRA SAMPLE APIS */}
+                    <option value="/api/department/billing">
+                      Billing Dept API
+                    </option>
+                    <option value="/api/department/technical">
+                      Technical Dept API
+                    </option>
+                    <option value="/api/department/accounts">
+                      Accounts Dept API
+                    </option>
+                    <option value="/api/department/compliance">
+                      Compliance Dept API
+                    </option>
 
-        {/* Input for custom URL */}
-        <input
-          placeholder="Enter custom endpoint URL"
-          value={local.api_config.endpoint ?? ""}
-          onChange={(e) => updateApi("endpoint", e.target.value)}
-          className="w-full p-2 border rounded-lg"
-        />
-      </div>
+                    <option value="custom">Custom URL</option>
+                  </select>
 
-      {/* Method */}
-      <div>
-        <label className="text-xs">Method</label>
-        <select
-          value={local.api_config.method ?? "POST"}
-          onChange={(e) => updateApi("method", e.target.value)}
-          className="w-full p-2 border rounded-lg"
-        >
-          <option>POST</option>
-          <option>GET</option>
-          <option>PUT</option>
-          <option>DELETE</option>
-        </select>
-      </div>
-    </div>
-  </div>
-)}
+                  <input
+                    placeholder="Custom endpoint"
+                    value={local.api_config.endpoint ?? ""}
+                    onChange={(e) => updateApi("endpoint", e.target.value)}
+                    className="w-full p-2 border rounded-lg"
+                  />
+                </div>
 
-          {/* Next Step Map */}
+                {/* Method */}
+                <div>
+                  <label className="text-xs">Method</label>
+                  <select
+                    value={local.api_config.method ?? "POST"}
+                    onChange={(e) => updateApi("method", e.target.value)}
+                    className="w-full p-2 border rounded-lg"
+                  >
+                    <option>POST</option>
+                    <option>GET</option>
+                    <option>PUT</option>
+                    <option>DELETE</option>
+                  </select>
+                </div>
+
+                {/* Ticket Settings */}
+                {local.api_config.endpoint === "/api/chat/ticket/create" && (
+                  <div className="space-y-3 border p-3 rounded-lg bg-orange-50">
+                    <p className="font-medium text-sm">Ticket Settings</p>
+
+                    <input
+                      placeholder="Issue Type"
+                      value={local.api_config.issue_type || ""}
+                      onChange={(e) => updateApi("issue_type", e.target.value)}
+                      className="w-full p-2 border rounded-lg"
+                    />
+
+                    <input
+                      placeholder="Sub Issue"
+                      value={local.api_config.sub_issue || ""}
+                      onChange={(e) => updateApi("sub_issue", e.target.value)}
+                      className="w-full p-2 border rounded-lg"
+                    />
+
+                    <select
+                      value={local.api_config.priority || "medium"}
+                      onChange={(e) => updateApi("priority", e.target.value)}
+                      className="w-full p-2 border rounded-lg"
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Next Step Mapping */}
           <div>
             <label className="font-medium text-sm">Next Step Mapping</label>
 
             <div className="space-y-2 mt-3">
-              {local.step_type === "options" &&
-                local.options.map((opt) => (
-                  <div key={opt} className="flex gap-2 items-center">
-                    <span className="bg-gray-200 px-3 py-2 rounded-lg text-sm min-w-24">
-                      {opt}
+              {/* For Options + API */}
+              {(local.step_type === "options" ||
+                local.step_type === "api_call") &&
+                local.options.map((opt, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <span className="bg-gray-100 px-3 py-2 rounded-lg text-sm min-w-20">
+                      {opt || `Option ${i + 1}`}
                     </span>
 
                     <select
@@ -393,9 +448,10 @@ const StepEditor: React.FC<StepEditorProps> = ({
                   </div>
                 ))}
 
+              {/* Default mapping */}
               {["message", "input", "api_call"].includes(local.step_type) && (
                 <div className="flex gap-2 items-center">
-                  <span className="bg-gray-200 px-3 py-2 rounded-lg text-sm min-w-24">
+                  <span className="bg-gray-200 px-3 py-2 rounded-lg text-sm min-w-20">
                     default
                   </span>
 
@@ -435,9 +491,7 @@ const StepEditor: React.FC<StepEditorProps> = ({
               checked={local.is_initial || false}
               onChange={(e) => updateField("is_initial", e.target.checked)}
             />
-            <label className="text-sm font-medium">
-              Set as initial (starting) step
-            </label>
+            <label className="font-medium text-sm">Set as initial step</label>
           </div>
         </div>
       </div>

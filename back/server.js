@@ -42,6 +42,10 @@ app.use('/api/admin/users', require('./routes/adminUsers'));
 app.use('/api/chat', require('./routes/chatFlow'));
 // Add this to your server.js after auth routes
 app.use('/api/chat', require('./routes/chat'));
+app.use("/api/department", require("./routes/departmentApis"));
+app.use("/api/admin/departments", require("./routes/adminDepartmentRoutes"));
+
+
 
 app.get('/', function(req, res) {
     res.json({ message: 'Chat App API is running!' });

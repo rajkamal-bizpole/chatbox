@@ -160,55 +160,73 @@ const executeApiCall = async (step: ChatStep, userInput: string) => {
   if (!step.api_config?.endpoint) return null;
 
   try {
-    // SPECIAL: Ticket creation
+    // 📦 UNIVERSAL PAYLOAD FOR ANY API
+    const payload = {
+      session_id: chatSession?.session_id,
+      session_token: chatSession?.session_token,
+
+      user_input: userInput,
+      user_data: userData,
+      step_data: step,
+
+      // 🧾 Send complete chat logs to Dept API
+      chat_logs: messages.map((m) => ({
+        sender: m.sender,
+        text: m.text,
+        timestamp: m.timestamp,
+      })),
+    };
+
+    // 🟠 SPECIAL CASE: Ticket API (keep your logic)
     if (step.api_config.endpoint === "/api/chat/ticket/create") {
-      const response = await http.post(step.api_config.endpoint, {
-        session_token: chatSession?.session_token,
-        user_data: userData,
-        issue_type: userData.issue_type || userInput,
-        sub_issue: userData.sub_issue,
-        description: userData.description,
-        priority: userData.priority || "medium"
-      });
+      const ticketPayload = {
+        ...payload,
+        issue_type: step.api_config.issue_type || userData.issue_type || userInput,
+        sub_issue: step.api_config.sub_issue || userData.sub_issue || "",
+        priority: step.api_config.priority || userData.priority || "medium",
+        description: userData.description || "",
+      };
+
+      const response = await http.post(step.api_config.endpoint, ticketPayload);
       return response.data;
     }
 
-    // NORMAL API STEPS
-    const response = await http.post(step.api_config.endpoint, {
-      user_input: userInput,
-      user_data: userData,
-      step_data: step
-    });
-
+    // 🟢 UNIVERSAL CALL FOR ALL OTHER APIs (including 4 departments)
+    const response = await http.post(step.api_config.endpoint, payload);
     return response.data;
+
   } catch (error) {
     console.error("API call failed:", error);
-    return null;
+    return { error: true, message: "API failed" };
   }
 };
 
 
-  const addBotMessage = async (text: string, options?: string[], stepType?: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
+
+const addBotMessage = async (text: string, options?: string[], stepType?: string) => {
+  const isOptionStep = (stepType === 'options' || stepType === 'api_call');
+
+  const newMessage: Message = {
+    id: Date.now().toString(),
+    text,
+    sender: 'bot',
+    timestamp: new Date(),
+    type: isOptionStep ? 'option' : 'message',
+    options
+  };
+
+  setMessages(prev => [...prev, newMessage]);
+
+  if (currentStep) {
+    await saveMessageToBackend({
       text,
       sender: 'bot',
-      timestamp: new Date(),
-      type: stepType === 'options' ? 'option' : 'message',
+      type: isOptionStep ? 'option' : 'message',
       options
-    };
-    setMessages(prev => [...prev, newMessage]);
+    }, currentStep.step_key);
+  }
+};
 
-    // Save to backend if we have a current step
-    if (currentStep) {
-      await saveMessageToBackend({
-        text,
-        sender: 'bot',
-        type: stepType === 'options' ? 'option' : 'message',
-        options
-      }, currentStep.step_key);
-    }
-  };
 
   const addUserMessage = async (text: string) => {
     const newMessage: Message = {

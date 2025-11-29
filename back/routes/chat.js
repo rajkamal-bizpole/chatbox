@@ -395,28 +395,88 @@ router.get('/admin/session/:sessionId', async (req, res) => {
         });
     }
 });
-// Update ticket status
-router.put('/admin/ticket/:ticketId', async function(req, res) {
-    try {
-        const ticketId = req.params.ticketId;
-        const { status, assigned_to, priority } = req.body;
 
-        const query = 'UPDATE support_tickets SET status = ?, assigned_to = ?, priority = ? WHERE id = ?';
-        
-        const [result] = await db.query(query, [status, assigned_to, priority, ticketId]);
+router.get("/admin/tickets", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT 
+        st.id,
+        st.ticket_number,
+        st.issue_type,
+        st.sub_issue,
+        st.description,
+        st.status,
+        st.priority,
+        st.assigned_to,
+        st.created_at,
+        st.updated_at,
+        cs.id AS session_id,
+        cs.phone,
+        cs.customer_name,
+        cs.email
+      FROM support_tickets st
+      LEFT JOIN chat_sessions cs ON st.session_id = cs.id
+      ORDER BY st.created_at DESC
+      `
+    );
 
-        res.json({
-            success: true,
-            message: 'Ticket updated successfully'
-        });
-    } catch (err) {
-        console.error('Ticket update error:', err);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Failed to update ticket' 
-        });
-    }
+    res.json({
+      success: true,
+      tickets: rows,
+    });
+  } catch (err) {
+    console.error("❌ Admin tickets error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch tickets",
+    });
+  }
 });
+router.put('/admin/ticket/:ticketId', async function(req, res) {
+  try {
+    const ticketId = req.params.ticketId;
+
+    // Build dynamic update query
+    const updates = [];
+    const values = [];
+
+    if (req.body.status !== undefined) {
+      updates.push("status = ?");
+      values.push(req.body.status);
+    }
+
+    if (req.body.priority !== undefined) {
+      updates.push("priority = ?");
+      values.push(req.body.priority);
+    }
+
+    if (req.body.assigned_to !== undefined) {
+      updates.push("assigned_to = ?");
+      values.push(req.body.assigned_to);
+    }
+
+    if (updates.length === 0) {
+      return res.json({ success: false, message: "No fields to update" });
+    }
+
+    const query = `
+      UPDATE support_tickets 
+      SET ${updates.join(", ")} 
+      WHERE id = ?
+    `;
+
+    values.push(ticketId);
+
+    await db.query(query, values);
+
+    res.json({ success: true, message: "Ticket updated successfully" });
+  } catch (err) {
+    console.error("Ticket update error:", err);
+    res.status(500).json({ success: false, message: "Failed to update ticket" });
+  }
+});
+
 router.post('/validate-phone', async (req, res) => {
   try {
     const { user_input } = req.body;

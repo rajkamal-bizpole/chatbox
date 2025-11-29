@@ -8,6 +8,7 @@ import SupportTickets from './SupportTickets';
 import type { AdminTab } from '../../types/admin'; // Add 'type' keyword
 import  CustomerChats from './CustomerChats';
 import ChatFlowManager from './ChatFlowManager';
+import DepartmentRequests from './DepartmentRequests';
 
 const AdminPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AdminTab>('analytics');
@@ -26,6 +27,8 @@ const AdminPanel: React.FC = () => {
           return <CustomerChats/>
                   case 'chatflows':
           return <ChatFlowManager/>
+                   case 'departments':
+          return <DepartmentRequests/>
       default:
         return <ChatAnalytics />;
     }
