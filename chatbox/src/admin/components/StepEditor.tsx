@@ -6,6 +6,7 @@ interface StepEditorProps {
   allSteps: ChatStep[];
   onUpdate: (updated: ChatStep) => void;
   onDelete: (key: string) => void;
+  onRequestClose: () => void;
 }
 
 /* ------------------------------
@@ -48,6 +49,7 @@ const StepEditor: React.FC<StepEditorProps> = ({
   allSteps,
   onUpdate,
   onDelete,
+  onRequestClose,
 }) => {
   const [local, setLocal] = useState<ChatStep>({
     ...step,
@@ -66,9 +68,15 @@ const StepEditor: React.FC<StepEditorProps> = ({
   const [showMapDelete, setShowMapDelete] = useState(false);
   const [mapKeyToDelete, setMapKeyToDelete] = useState<string | null>(null);
 
+  // snapshot of step when editor is opened (for discard)
+  const [initialStep, setInitialStep] = useState<ChatStep | null>(null);
+
+  // for "Save / Discard / Cancel" popup
+  const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
+
   /* Sync props → state */
   useEffect(() => {
-    setLocal({
+    const normalized: ChatStep = {
       ...step,
       options: Array.isArray(step.options) ? step.options : [],
       validation_rules:
@@ -77,15 +85,21 @@ const StepEditor: React.FC<StepEditorProps> = ({
         typeof step.next_step_map === "object" ? step.next_step_map : {},
       api_config:
         typeof step.api_config === "object" ? step.api_config : {},
-    });
+    };
+
+    setLocal(normalized);
+    setInitialStep(normalized); // snapshot used for "Discard"
   }, [step]);
 
   /* General update */
-  const updateField = (key: keyof ChatStep, value: any) => {
-    const updated = { ...local, [key]: value };
-    setLocal(updated);
-    onUpdate(updated);
-  };
+const updateField = (key: keyof ChatStep, value: any) => {
+  setLocal((prev) => {
+    const updated = { ...prev, [key]: value };
+    onUpdate(updated);     // <--- send updates to FlowBuilder
+    return updated;
+  });
+};
+
 
   /* Validation Update */
   const updateValidation = (key: string, value: any) => {
@@ -151,6 +165,19 @@ const StepEditor: React.FC<StepEditorProps> = ({
     setShowMapDelete(false);
   };
 
+  const hasUnsavedChanges = () => {
+    if (!initialStep) return false;
+    return JSON.stringify(initialStep) !== JSON.stringify(local);
+  };
+
+  const handleCloseClick = () => {
+    if (hasUnsavedChanges()) {
+      setShowUnsavedConfirm(true);
+    } else {
+      onRequestClose();
+    }
+  };
+
   return (
     <>
       {/* Modals */}
@@ -178,19 +205,32 @@ const StepEditor: React.FC<StepEditorProps> = ({
         onCancel={() => setShowMapDelete(false)}
       />
 
-      {/* Main UI */}
+      {/* Main UI WRAPPER - FIXED */}
       <div className="bg-white border rounded-lg p-6 shadow-sm">
-        <div className="flex justify-between mb-6">
-          <h2 className="text-lg font-semibold">Step Editor</h2>
 
+        {/* HEADER */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold">Step Editor</h2>
+
+            <button
+              className="text-red-600 text-sm"
+              onClick={() => setShowStepDelete(true)}
+            >
+              Delete Step
+            </button>
+          </div>
+
+          {/* Close icon (X) */}
           <button
-            className="text-red-600 text-sm"
-            onClick={() => setShowStepDelete(true)}
+            className="text-gray-600 hover:text-black text-xl leading-none"
+            onClick={handleCloseClick}
           >
-            Delete Step
+            ✕
           </button>
         </div>
 
+        {/* BODY (unchanged) */}
         <div className="space-y-6">
           {/* Step Key + Type */}
           <div className="grid grid-cols-2 gap-4">
@@ -229,9 +269,8 @@ const StepEditor: React.FC<StepEditorProps> = ({
             />
           </div>
 
-          {/* Options (OPTIONS + API_CALL) */}
-          {(local.step_type === "options" ||
-            local.step_type === "api_call") && (
+          {/* Options */}
+          {(local.step_type === "options" || local.step_type === "api_call") && (
             <div>
               <label className="font-medium text-sm">Options</label>
 
@@ -334,7 +373,6 @@ const StepEditor: React.FC<StepEditorProps> = ({
                       Create Support Ticket
                     </option>
 
-                    {/* EXTRA SAMPLE APIS */}
                     <option value="/api/department/billing">
                       Billing Dept API
                     </option>
@@ -414,9 +452,7 @@ const StepEditor: React.FC<StepEditorProps> = ({
             <label className="font-medium text-sm">Next Step Mapping</label>
 
             <div className="space-y-2 mt-3">
-              {/* For Options + API */}
-              {(local.step_type === "options" ||
-                local.step_type === "api_call") &&
+              {(local.step_type === "options" || local.step_type === "api_call") &&
                 local.options.map((opt, i) => (
                   <div key={i} className="flex gap-2 items-center">
                     <span className="bg-gray-100 px-3 py-2 rounded-lg text-sm min-w-20">
@@ -448,7 +484,6 @@ const StepEditor: React.FC<StepEditorProps> = ({
                   </div>
                 ))}
 
-              {/* Default mapping */}
               {["message", "input", "api_call"].includes(local.step_type) && (
                 <div className="flex gap-2 items-center">
                   <span className="bg-gray-200 px-3 py-2 rounded-lg text-sm min-w-20">
@@ -495,6 +530,56 @@ const StepEditor: React.FC<StepEditorProps> = ({
           </div>
         </div>
       </div>
+
+      {/* UNSAVED CHANGES MODAL */}
+      {showUnsavedConfirm && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[10000]">
+          <div className="bg-white w-full max-w-md rounded-xl shadow-xl p-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-3">
+              Unsaved Changes
+            </h2>
+            <p className="text-gray-600 mb-6">
+              You have unsaved changes for this step. What would you like to do?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              {/* Cancel */}
+              <button
+                className="px-4 py-2 bg-gray-200 rounded-lg"
+                onClick={() => setShowUnsavedConfirm(false)}
+              >
+                Cancel
+              </button>
+
+              {/* Discard */}
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded-lg"
+                onClick={() => {
+                  if (initialStep) {
+                    setLocal(initialStep);
+                    onUpdate(initialStep);
+                  }
+                  setShowUnsavedConfirm(false);
+                  onRequestClose();
+                }}
+              >
+                Discard
+              </button>
+
+              {/* Save */}
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                onClick={() => {
+                  setShowUnsavedConfirm(false);
+                  onRequestClose();
+                }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

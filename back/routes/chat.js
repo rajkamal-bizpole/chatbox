@@ -1,7 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-
+function mapSessionStatus(dbStatus) {
+  switch (dbStatus) {
+    case "resolved":
+    case "closed":
+      return "completed"; // UI expects this value
+    default:
+      return dbStatus;    // active, escalated
+  }
+}
 // Generate unique session token
 const generateSessionToken = function() {
     return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -294,6 +302,7 @@ router.get('/admin/sessions', async (req, res) => {
         // Log session data for debugging
         sessions.forEach(session => {
             console.log(`Session ${session.id}:`, {
+                status: mapSessionStatus(session.status),  
                 phone: session.phone,
                 customer_name: session.customer_name,
                 is_existing_customer: session.is_existing_customer,

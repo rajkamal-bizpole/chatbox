@@ -104,23 +104,21 @@ const ChatBuilderAdmin: React.FC = () => {
   }, []);
 
   const loadFlows = async () => {
-    setIsLoading(true);
-    try {
-      const data = await chatFlowAPI.getFlows();
-      setFlows(data);
+  setIsLoading(true);
+  try {
+    const data = await chatFlowAPI.getFlows();
+    setFlows(data);
 
-      const active = data.find((f: ChatFlow) => f.is_active) || data[0];
+    // DO NOT AUTO-OPEN ANY FLOW
+    setActiveTab("flows");
 
-      if (active) {
-        await selectFlow(active);
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Failed to load flows");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  } catch (err) {
+    console.error(err);
+    setError("Failed to load flows");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   /* ---------------------------- Select Flow ---------------------------- */
   const selectFlow = async (flow: ChatFlow) => {
@@ -282,17 +280,20 @@ const addStep = (): ChatStep => {
   };
 
   /* ---------------------------- Create Flow ---------------------------- */
-  const createNewFlow = () => {
-    setCurrentFlow({
-      name: "New Chat Flow",
-      description: "",
-      is_active: false,
-      steps: [],
-    });
-    setActiveTab("builder");
-    setSelectedStep(null);
-    setPreviewStep("");
-  };
+const createNewFlow = () => {
+  setSelectedStep(null);
+
+  setCurrentFlow({
+    name: "New Chat Flow",
+    description: "",
+    is_active: false,
+    steps: [],
+  });
+
+  setPreviewStep("");
+  setActiveTab("builder");
+};
+
 
   /* ---------------------------- Render ---------------------------- */
   return (
@@ -418,59 +419,70 @@ const FlowsList: React.FC<{
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {flows.map((flow) => (
             <div
-              key={flow.id}
-              className="p-4 border rounded-lg shadow-sm hover:shadow-md transition cursor-pointer"
-            >
-              <div
-                onClick={() => onFlowSelect(flow)}
-                className="mb-3"
-              >
-                <h3 className="font-semibold text-lg">{flow.name}</h3>
-                <p className="text-gray-600 text-sm">{flow.description}</p>
-              </div>
+  key={flow.id}
+  className="p-4 border rounded-lg shadow-sm hover:shadow-md transition cursor-pointer"
+  onClick={() => onFlowSelect(flow)}
+>
+  <div className="mb-3">
+    <h3 className="font-semibold text-lg">{flow.name}</h3>
+    <p className="text-gray-600 text-sm">{flow.description}</p>
+  </div>
 
-              <div className="flex items-center justify-between mt-4">
-                <span
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    flow.is_active
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  {flow.is_active ? "Active" : "Inactive"}
-                </span>
+  <div className="flex items-center justify-between mt-4">
+    <span
+      className={`px-3 py-1 rounded-full text-sm ${
+        flow.is_active
+          ? "bg-green-100 text-green-700"
+          : "bg-gray-200 text-gray-700"
+      }`}
+    >
+      {flow.is_active ? "Active" : "Inactive"}
+    </span>
 
-                <div className="flex gap-3 text-sm">
-                  <button
-                    className="text-blue-600"
-                    onClick={() => onFlowSelect(flow)}
-                  >
-                    Edit
-                  </button>
+    <div className="flex gap-3 text-sm">
+      <button
+        className="text-blue-600"
+        onClick={(e) => {
+          e.stopPropagation();
+          onFlowSelect(flow);
+        }}
+      >
+        Edit
+      </button>
 
-                  <button
-                    className="text-gray-600"
-                    onClick={() => onDuplicate(flow)}
-                  >
-                    Copy
-                  </button>
+      <button
+        className="text-gray-600"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDuplicate(flow);
+        }}
+      >
+        Copy
+      </button>
 
-                  <button
-                    className="text-red-600 font-semibold"
-                    onClick={() => onDelete(flow)}
-                  >
-                    Delete
-                  </button>
+      <button
+        className="text-red-600"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(flow);
+        }}
+      >
+        Delete
+      </button>
 
-                  <button
-                    className="text-orange-600"
-                    onClick={() => onToggleStatus(flow)}
-                  >
-                    {flow.is_active ? "Disable" : "Enable"}
-                  </button>
-                </div>
-              </div>
-            </div>
+      <button
+        className="text-orange-600"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleStatus(flow);
+        }}
+      >
+        {flow.is_active ? "Disable" : "Enable"}
+      </button>
+    </div>
+  </div>
+</div>
+
           ))}
         </div>
       )}

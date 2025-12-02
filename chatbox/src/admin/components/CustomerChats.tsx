@@ -18,7 +18,8 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  CheckCircle
 } from 'lucide-react';
 import http from '../../api/http';
 
@@ -166,6 +167,9 @@ const AdminPanel: React.FC = () => {
     switch (status) {
       case 'active': return <Activity size={16} className="text-green-500" />;
       case 'escalated': return <Shield size={16} className="text-yellow-500" />;
+      case "completed":
+  return <CheckCircle size={16} className="text-blue-600" />;
+
       default: return <MessageCircle size={16} className="text-gray-500" />;
     }
   };
@@ -174,6 +178,9 @@ const AdminPanel: React.FC = () => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800 border-green-200';
       case 'escalated': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case "completed":
+  return "bg-blue-100 text-blue-800 border-blue-200";
+
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };

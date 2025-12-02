@@ -209,23 +209,20 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl relative max-h-[90vh] overflow-y-auto">
 
               {/* Close Button */}
-              <button
-                className="absolute top-3 right-3 text-gray-600 hover:text-black"
-                onClick={() => setShowStepEditorModal(false)}
-              >
-                ✕
-              </button>
+         
 
               {/* Step Editor */}
-              <StepEditor
-                step={selectedStep}
-                onUpdate={onStepUpdate}
-                onDelete={(key) => {
-                  onStepDelete(key);
-                  setShowStepEditorModal(false);
-                }}
-                allSteps={currentFlow.steps}
-              />
+           <StepEditor
+  step={selectedStep}
+  onUpdate={onStepUpdate}
+  onDelete={(key) => {
+    onStepDelete(key);
+    setShowStepEditorModal(false);
+  }}
+  allSteps={currentFlow.steps}
+  onRequestClose={() => setShowStepEditorModal(false)}
+/>
+
 
               {/* Save + Close */}
               <div className="flex justify-end gap-3 p-4 border-t bg-gray-50 mt-4">

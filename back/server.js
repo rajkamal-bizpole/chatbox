@@ -44,7 +44,7 @@ app.use('/api/chat', require('./routes/chatFlow'));
 app.use('/api/chat', require('./routes/chat'));
 app.use("/api/department", require("./routes/departmentApis"));
 app.use("/api/admin/departments", require("./routes/adminDepartmentRoutes"));
-
+app.use ("/admin/analytics", require("./routes/chatAnalytics"))
 
 
 app.get('/', function(req, res) {
