@@ -263,6 +263,32 @@ router.post('/ticket/create', async function(req, res) {
     }
 });
 
+
+router.post("/session/resolve", async (req, res) => {
+  try {
+    const { session_token } = req.body;
+
+    const [rows] = await db.query(
+      "SELECT id FROM chat_sessions WHERE session_token = ?",
+      [session_token]
+    );
+
+    if (!rows.length) {
+      return res.json({ success: false, message: "Session not found" });
+    }
+
+    await db.query(
+      "UPDATE chat_sessions SET status = 'resolved', updated_at = NOW() WHERE id = ?",
+      [rows[0].id]
+    );
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return res.json({ success: false, message: 'Server error' });
+  }
+});
+
 // Get chat history for admin
 // routes/chatAdmin.js
 // routes/chatAdmin.js
@@ -272,28 +298,47 @@ router.get('/admin/sessions', async (req, res) => {
         console.log('📋 Fetching sessions for admin panel...');
         
         // Updated query to include email from users table
-        const query = `
-            SELECT 
-                cs.id,
-                cs.session_token,
-                cs.phone,
-                cs.status,
-                cs.customer_name,
-                cs.is_existing_customer,
-                cs.user_id,
-                cs.created_at,
-                COALESCE(cs.updated_at, cs.created_at) as last_activity,
-                COUNT(cm.id) as message_count,
-                (SELECT ticket_number FROM support_tickets 
-                 WHERE session_id = cs.id 
-                 ORDER BY created_at DESC LIMIT 1) as latest_ticket,
-                u.email as user_email  -- Join with users table to get email
-            FROM chat_sessions cs
-            LEFT JOIN chat_messages cm ON cs.id = cm.session_id
-            LEFT JOIN users u ON cs.user_id = u.id  -- Join with users table
-            GROUP BY cs.id
-            ORDER BY last_activity DESC
-        `;
+   const query = `
+SELECT 
+    cs.id,
+    cs.session_token,
+    cs.phone,
+    cs.status,
+    cs.customer_name,
+    cs.is_existing_customer,
+    cs.user_id,
+    cs.created_at,
+    COALESCE(cs.updated_at, cs.created_at) as last_activity,
+    COUNT(DISTINCT cm.id) as message_count,
+
+    -- Latest ticket
+    (
+      SELECT ticket_number 
+      FROM support_tickets 
+      WHERE session_id = cs.id 
+      ORDER BY created_at DESC 
+      LIMIT 1
+    ) as latest_ticket,
+
+    -- ✅ Department (latest request)
+    (
+      SELECT dr.department
+      FROM department_requests dr
+      WHERE dr.session_id = cs.id
+      ORDER BY dr.created_at DESC
+      LIMIT 1
+    ) as department,
+
+    u.email as user_email
+
+FROM chat_sessions cs
+LEFT JOIN chat_messages cm ON cs.id = cm.session_id
+LEFT JOIN users u ON cs.user_id = u.id
+
+GROUP BY cs.id
+ORDER BY last_activity DESC
+`;
+
 
         const [sessions] = await db.query(query);
         
@@ -321,6 +366,7 @@ router.get('/admin/sessions', async (req, res) => {
                 customer_name: session.customer_name || null,
                 email: session.user_email || null, // Use email from users table
                 // Format dates properly
+                    department: session.department || 'unassigned', // ✅ IMPORTANT
                 last_activity: session.last_activity || session.created_at
             }))
         });
@@ -342,12 +388,22 @@ router.get('/admin/session/:sessionId', async (req, res) => {
         console.log(`📖 Fetching details for session ${sessionId}`);
 
         // Get session basic info with user email
-        const [sessions] = await db.query(`
-            SELECT cs.*, u.email as user_email 
-            FROM chat_sessions cs
-            LEFT JOIN users u ON cs.user_id = u.id
-            WHERE cs.id = ?
-        `, [sessionId]);
+      const [sessions] = await db.query(`
+    SELECT 
+      cs.*,
+      u.email as user_email,
+      (
+        SELECT dr.department
+        FROM department_requests dr
+        WHERE dr.session_id = cs.id
+        ORDER BY dr.created_at DESC
+        LIMIT 1
+      ) as department
+    FROM chat_sessions cs
+    LEFT JOIN users u ON cs.user_id = u.id
+    WHERE cs.id = ?
+`, [sessionId]);
+
 
         if (sessions.length === 0) {
             return res.status(404).json({
@@ -386,6 +442,7 @@ router.get('/admin/session/:sessionId', async (req, res) => {
             session: {
                 ...session,
                 email: session.user_email, // Include email in response
+                  department: session.department || 'unassigned',
                 is_existing_customer: Boolean(session.is_existing_customer)
             },
             messages: messages.map(msg => ({

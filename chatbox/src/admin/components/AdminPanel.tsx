@@ -11,19 +11,13 @@ import ChatFlowManager from './ChatFlowManager';
 import DepartmentRequests from './DepartmentRequests';
 
 const AdminPanel: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<AdminTab>('analytics');
 
-  // -------------------------------------------
-  // ✅ Load persisted tab on first render
-  // -------------------------------------------
-  useEffect(() => {
-    const savedTab = localStorage.getItem("admin_active_tab") as AdminTab;
-    if (savedTab) setActiveTab(savedTab);
-  }, []);
+  // ✅ Load from localStorage BEFORE the first render
+  const [activeTab, setActiveTab] = useState<AdminTab>(() => {
+    return (localStorage.getItem("admin_active_tab") as AdminTab) || "analytics";
+  });
 
-  // -------------------------------------------
-  // ✅ Save active tab whenever it changes
-  // -------------------------------------------
+  // ✅ Save to localStorage whenever updated
   useEffect(() => {
     localStorage.setItem("admin_active_tab", activeTab);
   }, [activeTab]);

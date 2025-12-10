@@ -110,6 +110,16 @@ const DepartmentRequests: React.FC = () => {
   useEffect(() => {
     loadRequests();
   }, []);
+const loadFullChat = async (sessionId: number) => {
+  try {
+    const res = await http.get(`/api/admin/departments/chat/${sessionId}`);
+    if (res.data.success) {
+      setSelectedChat(res.data.messages);
+    }
+  } catch (err) {
+    console.error("Error loading full chat", err);
+  }
+};
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -295,7 +305,8 @@ const DepartmentRequests: React.FC = () => {
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row lg:flex-col gap-2 min-w-[200px]">
                       <button
-                        onClick={() => setSelectedChat(req.chat_logs)}
+                       onClick={() => loadFullChat(req.session_id)}
+
                         className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                       >
                         <Eye size={16} />

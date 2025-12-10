@@ -36,6 +36,7 @@ interface ChatSession {
   created_at: string;
   customer_name: string;
   is_existing_customer: boolean;
+   department: string;
 }
 
 interface Message {
@@ -57,7 +58,7 @@ interface SupportTicket {
 
 const ITEMS_PER_PAGE = 10;
 
-const AdminPanel: React.FC = () => {
+const CustomerChats: React.FC = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<ChatSession | null>(null);
   const [sessionDetails, setSessionDetails] = useState<{
@@ -74,6 +75,7 @@ const AdminPanel: React.FC = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [isConversationModalOpen, setIsConversationModalOpen] = useState(false);
+const [departmentFilter, setDepartmentFilter] = useState('all');
 
   useEffect(() => {
     fetchSessions();
@@ -395,6 +397,22 @@ const AdminPanel: React.FC = () => {
                 <option value="existing">Existing</option>
                 <option value="new">New</option>
               </select>
+              <select
+  className="px-4 py-3 rounded-xl border border-gray-200 bg-white"
+  value={departmentFilter}
+  onChange={(e) => {
+    setDepartmentFilter(e.target.value);
+    setCurrentPage(1);
+  }}
+>
+  <option value="all">All Departments</option>
+  <option value="support">Support</option>
+  <option value="sales">Sales</option>
+  <option value="billing">Billing</option>
+  <option value="technical">Technical</option>
+  <option value="unassigned">Unassigned</option>
+</select>
+
             </div>
           </div>
         </div>
@@ -426,7 +444,9 @@ const AdminPanel: React.FC = () => {
                       { key: 'message_count', label: 'Messages' },
                       { key: 'last_activity', label: 'Last Activity' },
                       { key: 'is_existing_customer', label: 'Type' },
-                      { key: 'latest_ticket', label: 'Ticket' }
+                      { key: 'latest_ticket', label: 'Ticket' },
+                      { key: 'department', label: 'Department' }
+
                     ].map(({ key, label }) => (
                       <th 
                         key={key}
@@ -538,6 +558,12 @@ const AdminPanel: React.FC = () => {
                             <span className="text-gray-400 text-sm">No ticket</span>
                           )}
                         </td>
+                        <td className="px-6 py-4">
+  <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+    {session.department || 'Unassigned'}
+  </span>
+</td>
+
                       </tr>
                     );
                   })}
@@ -683,4 +709,4 @@ const AdminPanel: React.FC = () => {
   );
 };
 
-export default AdminPanel;
+export default CustomerChats;

@@ -216,7 +216,8 @@ router.post('/flows', async (req, res) => {
                     safeJsonStringify(step.next_step_map || {}),
                     safeJsonStringify(step.api_config || {}),
                     step.is_initial || false,
-                    step.sort_order || index
+                    step.sort_order ?? index
+
                 ]);
             }
         }

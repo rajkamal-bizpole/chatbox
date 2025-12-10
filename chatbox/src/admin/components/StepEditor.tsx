@@ -95,7 +95,12 @@ const StepEditor: React.FC<StepEditorProps> = ({
 const updateField = (key: keyof ChatStep, value: any) => {
   setLocal((prev) => {
     const updated = { ...prev, [key]: value };
-    onUpdate(updated);     // <--- send updates to FlowBuilder
+
+    // prevent parent update for step_key until save
+    if (key !== "step_key") {
+      onUpdate(updated);
+    }
+
     return updated;
   });
 };
@@ -348,6 +353,7 @@ const updateField = (key: keyof ChatStep, value: any) => {
                         "/api/chat/validate-email",
                         "/api/chat/validate-phone",
                         "/api/chat/ticket/create",
+                        "/api/chat/session/resolve",   
                         "/api/department/billing",
                         "/api/department/technical",
                         "/api/department/accounts",
@@ -372,7 +378,7 @@ const updateField = (key: keyof ChatStep, value: any) => {
                     <option value="/api/chat/ticket/create">
                       Create Support Ticket
                     </option>
-
+  <option value="/api/chat/session/resolve">Auto Resolve Session</option>
                     <option value="/api/department/billing">
                       Billing Dept API
                     </option>
@@ -568,14 +574,16 @@ const updateField = (key: keyof ChatStep, value: any) => {
 
               {/* Save */}
               <button
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-                onClick={() => {
-                  setShowUnsavedConfirm(false);
-                  onRequestClose();
-                }}
-              >
-                Save
-              </button>
+  className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+  onClick={() => {
+    onUpdate(local); // <-- now apply new step_key
+    setShowUnsavedConfirm(false);
+    onRequestClose();
+  }}
+>
+  Save
+</button>
+
             </div>
           </div>
         </div>

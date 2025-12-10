@@ -39,16 +39,20 @@ const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
     const step = flow.steps?.find((s) => s.step_key === currentStepKey);
     if (!step) return;
 
-    setMessages([
-      {
-        id: "1",
-        text: step.message_text,
-        sender: "bot",
-        timestamp: new Date(),
-        type: step.step_type === "options" ? "option" : "message",
-        options: Array.isArray(step.options) ? step.options : [],
-      },
-    ]);
+setMessages([
+  {
+    id: "1",
+    text: step.message_text,
+    sender: "bot",
+    timestamp: new Date(),
+    type:
+      step.step_type === "options" || step.step_type === "api_call"
+        ? "option"
+        : "message",
+    options: Array.isArray(step.options) ? step.options : [],
+  },
+]);
+
   }, [flow, currentStepKey]);
 
   /* Handle clicking an option or sending user input */

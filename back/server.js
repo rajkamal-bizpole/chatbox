@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5000;
 
 // Enhanced CORS configuration for cookies
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173',"http://localhost:5174",],
   credentials: true
 }));
 

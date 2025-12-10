@@ -190,6 +190,7 @@ const executeApiCall = async (step: ChatStep, userInput: string) => {
       const response = await http.post(step.api_config.endpoint, ticketPayload);
       return response.data;
     }
+    
 
     // 🟢 UNIVERSAL CALL FOR ALL OTHER APIs (including 4 departments)
     const response = await http.post(step.api_config.endpoint, payload);

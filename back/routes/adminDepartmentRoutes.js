@@ -57,6 +57,34 @@ router.put("/resolve/:id", async (req, res) => {
     return res.status(500).json({ success: false, message: "Failed to resolve request" });
   }
 });
+// GET FULL CHAT HISTORY FOR A SESSION
+// GET FULL CHAT HISTORY FOR A GIVEN SESSION
+router.get("/chat/:session_id", async (req, res) => {
+  const sessionId = req.params.session_id;
+
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT 
+        id,
+        message_type,      -- "user" or "bot"
+        content,           -- message text
+        step,              -- step key
+        created_at
+      FROM chat_messages
+      WHERE session_id = ?
+      ORDER BY id ASC
+      `,
+      [sessionId]
+    );
+
+    return res.json({ success: true, messages: rows });
+  } catch (err) {
+    console.error("Failed to load chat history", err);
+    return res.status(500).json({ success: false, message: "Failed to load chat history" });
+  }
+});
+
 
 
 module.exports = router;
