@@ -1,14 +1,14 @@
 // admin/components/AdminPanel.tsx
 import React, { useEffect, useState } from 'react';
 import AdminSidebar from './AdminSidebar';
-import ChatAnalytics from './ChatAnalytics';
-import ChatLogs from './ChatLogs';
-import UserManagement from './UserManagement';
-import SupportTickets from './SupportTickets';
-import type { AdminTab } from '../../types/admin';
-import CustomerChats from './CustomerChats';
-import ChatFlowManager from './ChatFlowManager';
-import DepartmentRequests from './DepartmentRequests';
+import ChatAnalytics from '../analytics/ChatAnalytics';
+import ChatLogs from '../chats/ChatLogs';
+import UserManagement from '../users/UserManagement';
+import SupportTickets from '../tickets/SupportTickets';
+import type { AdminTab } from '../../../types/admin';
+import CustomerChats from '../chats/CustomerChats';
+import ChatFlowManager from '../flows/ChatFlowManager';
+import DepartmentRequests from '../departments/DepartmentRequests';
 
 const AdminPanel: React.FC = () => {
 

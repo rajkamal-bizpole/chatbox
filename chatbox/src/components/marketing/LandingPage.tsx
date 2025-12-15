@@ -1,8 +1,8 @@
 // Update LandingPage.tsx to include ChatBox
 import React from 'react';
-import Navbar from './Navbar.tsx';
+import Navbar from '../layout/Navbar.tsx';
 import HeroSection from './HeroSection';
-import ChatBox from './ChatBox';
+import ChatBox from '../chat/ChatBox.tsx';
 
 const LandingPage: React.FC = () => {
   return (

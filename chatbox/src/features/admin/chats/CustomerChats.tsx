@@ -1,4 +1,4 @@
-// components/AdminPanel.tsx
+
 import React, { useState, useEffect } from 'react';
 import { 
   MessageSquare, 
@@ -21,7 +21,7 @@ import {
   X,
   CheckCircle
 } from 'lucide-react';
-import http from '../../api/http';
+import http from '../../../api/http';
 
 interface ChatSession {
   id: number;

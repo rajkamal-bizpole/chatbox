@@ -1,46 +1,11 @@
 // components/ChatBox.tsx
 import React, { useState, useRef, useEffect } from 'react';
-import http from "../api/http";
+import http from "../../api/http";
+import type { ChatFlow, ChatStep } from "../../types/chat/chat-flow.types";
+import type { Message } from "../../types/chat/message.types";
+import type { ChatSession, UserData } from "../../types/chat/session.types";
+import { API_ENDPOINTS } from "../../api/api.endpoints";
 
-interface ChatStep {
-  step_key: string;
-  step_type: 'message' | 'options' | 'input' | 'api_call';
-  message_text: string;
-  options: string[];
-  validation_rules: any;
-  next_step_map: { [key: string]: string };
-  api_config: any;
-  is_initial?: boolean;
-  sort_order: number;
-}
-
-interface ChatFlow {
-  id?: number;
-  name: string;
-  description: string;
-  is_active: boolean;
-  steps: ChatStep[];
-  created_at?: string;
-  step_count?: number;
-}
-
-interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'bot';
-  timestamp: Date;
-  type?: 'option' | 'input' | 'message';
-  options?: string[];
-}
-
-interface ChatSession {
-  session_token: string;
-  session_id: number;
-}
-
-interface UserData {
-  [key: string]: any;
-}
 
 const ChatBox: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -74,7 +39,7 @@ const ChatBox: React.FC = () => {
 const loadActiveFlow = async () => {
   try {
     setIsLoading(true);
-    const response = await http.get('/api/chat/flows/active');
+    const response = await http.get(API_ENDPOINTS.CHAT.ACTIVE_FLOW);
     setCurrentFlow(response.data);
     
     console.log('🔍 Active Flow Steps:', response.data.steps);
@@ -98,7 +63,7 @@ const loadActiveFlow = async () => {
   const initializeChat = async () => {
     try {
       // Start chat session
-      const sessionResponse = await http.post('/api/chat/session/start', {
+      const sessionResponse = await http.post(API_ENDPOINTS.CHAT.START_SESSION,{
         phone: null,
         user_id: null
       });
@@ -148,7 +113,7 @@ const saveMessageToBackend = async (message: Omit<Message, 'id' | 'timestamp'>, 
 
     console.log('📤 Sending payload:', JSON.stringify(payload, null, 2));
 
-    const response = await http.post('/api/chat/message/save', payload);
+    const response = await http.post(API_ENDPOINTS.CHAT.SAVE_MESSAGE,  payload);
     
     console.log('✅ Message saved successfully:', response.data);
   } catch (error) {
@@ -178,7 +143,7 @@ const executeApiCall = async (step: ChatStep, userInput: string) => {
     };
 
     // 🟠 SPECIAL CASE: Ticket API (keep your logic)
-    if (step.api_config.endpoint === "/api/chat/ticket/create") {
+    if (step.api_config.endpoint === API_ENDPOINTS.CHAT.CREATE_TICKET) {
       const ticketPayload = {
         ...payload,
         issue_type: step.api_config.issue_type || userData.issue_type || userInput,
@@ -187,7 +152,7 @@ const executeApiCall = async (step: ChatStep, userInput: string) => {
         description: userData.description || "",
       };
 
-      const response = await http.post(step.api_config.endpoint, ticketPayload);
+      const response = await http.post(API_ENDPOINTS.CHAT.CREATE_TICKET, ticketPayload);
       return response.data;
     }
     
@@ -389,31 +354,7 @@ const handleSendMessage = async () => {
     }
   };
 
-  const createSupportTicket = async (issueData: any) => {
-    if (!chatSession) return null;
-
-    try {
-      const response = await http.post('/api/chat/ticket/create', {
-        session_token: chatSession.session_token,
-        ...issueData
-      });
-      return response.data.ticket_number;
-    } catch (error) {
-      console.error('Failed to create ticket:', error);
-      return 'BZ' + Date.now().toString().slice(-6); // Fallback
-    }
-  };
-
-  // Helper function to safely parse JSON fields
-  const safeJsonParse = (str: any, defaultValue: any = {}) => {
-    if (!str) return defaultValue;
-    if (typeof str === 'object') return str;
-    try {
-      return JSON.parse(str);
-    } catch (error) {
-      return defaultValue;
-    }
-  };
+ 
 
   return (
     <>

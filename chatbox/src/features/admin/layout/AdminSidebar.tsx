@@ -1,6 +1,6 @@
 // admin/components/AdminSidebar.tsx
 import React from "react";
-import type { AdminTab } from "../../types/admin";
+import type { AdminTab } from "../../../types/admin";
 
 interface AdminSidebarProps {
   activeTab: AdminTab;

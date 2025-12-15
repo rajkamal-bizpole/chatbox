@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
-import http from "../../api/http";
-import type { ChatFlow, ChatStep } from "./types";
+import http from "../../../api/http";
+import type { ChatFlow, ChatStep } from "../components/types";
 
 interface Message {
   id: string;

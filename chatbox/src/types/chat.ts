@@ -9,3 +9,4 @@ export interface Message {
 }
 
 export type ChatStep = 'welcome' | 'userType' | 'phone' | 'products' | 'otherIssues';
+

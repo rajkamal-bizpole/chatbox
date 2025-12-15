@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Edit, Trash2, Plus, Search, Users, X, Loader2, Phone, Calendar, Clock } from "lucide-react";
-import http from '../../api/http';
+import http from '../../../api/http';
 
 interface User {
   id: number;

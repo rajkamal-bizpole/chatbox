@@ -1,7 +1,7 @@
 // components/Navbar.tsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import  http from "../api/http";
+import  http from "../../api/http";
 // Define User interface
 interface User {
   id: number;

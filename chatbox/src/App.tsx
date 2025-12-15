@@ -1,8 +1,8 @@
 // App.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LandingPage from './components/LandingPage';
-import AdminPanel from './admin/components/AdminPanel';
+import LandingPage from './components/marketing/LandingPage';
+import AdminPanel from './features/admin/layout/AdminPanel';
 
 function App() {
   return (
