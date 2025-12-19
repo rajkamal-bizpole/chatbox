@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import http from "../../../api/http";
 import FlowBuilder from "./FlowBuilder";
-import ChatPreview from "../chats/ChatPreview";
+import ChatPreview from "./ChatPreview";
 
 // ✅ type-only imports (fixes TS error)
 import type { ChatFlow, ChatStep } from "../components/types";

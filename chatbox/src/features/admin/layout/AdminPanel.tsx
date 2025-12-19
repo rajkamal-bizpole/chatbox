@@ -2,13 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import AdminSidebar from './AdminSidebar';
 import ChatAnalytics from '../analytics/ChatAnalytics';
-import ChatLogs from '../chats/ChatLogs';
+
 import UserManagement from '../users/UserManagement';
 import SupportTickets from '../tickets/SupportTickets';
 import type { AdminTab } from '../../../types/admin';
-import CustomerChats from '../chats/CustomerChats';
+import CustomerChats from '../chats/pages/CustomerChats';
 import ChatFlowManager from '../flows/ChatFlowManager';
-import DepartmentRequests from '../departments/DepartmentRequests';
+import DepartmentRequests from '../departments/pages/DepartmentRequestsPage';
 
 const AdminPanel: React.FC = () => {
 
@@ -26,8 +26,7 @@ const AdminPanel: React.FC = () => {
     switch (activeTab) {
       case 'analytics':
         return <ChatAnalytics />;
-      case 'chat-logs':
-        return <ChatLogs />;
+  
       case 'users':
         return <UserManagement />;
       case 'tickets':
