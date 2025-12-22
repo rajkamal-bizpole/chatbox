@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import type { ChatStep } from "./types";
+import type { ChatStep } from "../components/types";
 
 interface StepEditorProps {
   step: ChatStep;

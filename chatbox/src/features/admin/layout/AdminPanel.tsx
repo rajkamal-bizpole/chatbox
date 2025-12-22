@@ -4,7 +4,7 @@ import AdminSidebar from './AdminSidebar';
 import ChatAnalytics from '../analytics/ChatAnalytics';
 
 import UserManagement from '../users/UserManagement';
-import SupportTickets from '../tickets/SupportTickets';
+import SupportTickets from '../tickets/pages/SupportTicketsPage';
 import type { AdminTab } from '../../../types/admin';
 import CustomerChats from '../chats/pages/CustomerChats';
 import ChatFlowManager from '../flows/ChatFlowManager';
