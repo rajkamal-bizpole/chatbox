@@ -154,11 +154,11 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
                   </span>
                 </div>
 
-                {step.is_initial && (
-                  <span className="inline-block mt-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">
-                    Initial Step
-                  </span>
-                )}
+                          {Boolean(step.is_initial) && (
+  <span className="inline-block mt-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">
+    Initial Step
+  </span>
+)}
               </div>
             ))}
           </div>
@@ -171,16 +171,16 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
             <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] overflow-y-auto">
 
-              <StepEditor
-                step={selectedStep}
-                allSteps={currentFlow.steps}
-                onUpdate={onStepUpdate}
-                onDelete={(key) => {
-                  onStepDelete(key);
-                  setShowStepEditor(false);
-                }}
-                onRequestClose={() => setShowStepEditor(false)}
-              />
+      <StepEditor
+  step={selectedStep}
+  allSteps={currentFlow.steps}   // 🔥 THIS FIXES EVERYTHING
+  onUpdate={onStepUpdate}
+  onDelete={(key) => {
+    onStepDelete(key);
+    setShowStepEditor(false);
+  }}
+  onRequestClose={() => setShowStepEditor(false)}
+/>
 
               <div className="flex justify-end gap-3 p-4 border-t bg-gray-50">
                 <button

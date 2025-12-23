@@ -62,6 +62,15 @@ const ChatBuilderAdmin: React.FC = () => {
   const updateFlow = (updates: Partial<ChatFlow>) => {
     setCurrentFlow((prev) => ({ ...prev, ...updates }));
   };
+const validateFlow = (flow: ChatFlow) => {
+  for (const step of flow.steps) {
+    if (!step.message_text || !step.message_text.trim()) {
+      throw new Error(
+        `Step "${step.step_key}" must have message text`
+      );
+    }
+  }
+};
 
   const addStep = (): ChatStep => {
     const step: ChatStep = {
@@ -107,24 +116,29 @@ const ChatBuilderAdmin: React.FC = () => {
 
   /* ---------------- Save flow ---------------- */
   const saveFlow = async () => {
+  try {
+    validateFlow(currentFlow);   // 🔥 BLOCK BAD DATA
+
     setLoading(true);
-    try {
-      if (currentFlow.id) {
-        const updated = await chatFlowAPI.updateFlow(
-          currentFlow.id,
-          currentFlow
-        );
-        setCurrentFlow(updated);
-      } else {
-        const created = await chatFlowAPI.createFlow(currentFlow);
-        setFlows((p) => [...p, created]);
-        setCurrentFlow(created);
-      }
-      alert("Flow saved successfully");
-    } finally {
-      setLoading(false);
+    if (currentFlow.id) {
+      const updated = await chatFlowAPI.updateFlow(
+        currentFlow.id,
+        currentFlow
+      );
+      setCurrentFlow(updated);
+    } else {
+      const created = await chatFlowAPI.createFlow(currentFlow);
+      setFlows((p) => [...p, created]);
+      setCurrentFlow(created);
     }
-  };
+    alert("Flow saved successfully");
+  } catch (err: any) {
+    alert(err.message); // ✅ user-friendly
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   /* ---------------- Create new flow ---------------- */
   const createNewFlow = () => {
@@ -291,7 +305,9 @@ const FlowsList = ({
   onToggle: (f: ChatFlow) => void;
   onDelete: (f: ChatFlow) => void;
 }) => {
-  if (loading) return <p className="text-center py-10">Loading flows…</p>;
+  if (loading) {
+    return <p className="text-center py-10">Loading flows…</p>;
+  }
 
   return (
     <div>
@@ -310,46 +326,85 @@ const FlowsList = ({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {flows.map((flow) => (
-            <div
-              key={flow.id}
-              onClick={() => onEdit(flow)}
-              className="p-4 border rounded-lg hover:shadow cursor-pointer"
-            >
-              <h3 className="font-semibold">{flow.name}</h3>
-              <p className="text-sm text-gray-600">{flow.description}</p>
+  <div
+    key={flow.id}
+    onClick={() => onEdit(flow)}   // ✅ CARD CLICK = EDIT
+    className="p-4 border rounded-lg shadow-sm hover:shadow-md transition cursor-pointer"
+  >
+    {/* HEADER */}
+    <div className="mb-3">
+      <h3 className="font-semibold text-lg">{flow.name}</h3>
+      <p className="text-gray-600 text-sm">{flow.description}</p>
+    </div>
 
-              <div className="flex justify-between mt-4 text-sm">
-                <span
-                  className={`px-3 py-1 rounded-full ${
-                    flow.is_active
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  {flow.is_active ? "Active" : "Inactive"}
-                </span>
+    {/* FOOTER */}
+    <div className="flex items-center justify-between mt-4">
+      {/* STATUS */}
+      <span
+        className={`px-3 py-1 rounded-full text-sm ${
+          flow.is_active
+            ? "bg-green-100 text-green-700"
+            : "bg-gray-200 text-gray-700"
+        }`}
+      >
+        {flow.is_active ? "Active" : "Inactive"}
+      </span>
 
-                <div className="flex gap-3">
-                  <button onClick={(e) => { e.stopPropagation(); onDuplicate(flow); }}>
-                    Copy
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); onToggle(flow); }}>
-                    {flow.is_active ? "Disable" : "Enable"}
-                  </button>
-                  <button
-                    className="text-red-600"
-                    onClick={(e) => { e.stopPropagation(); onDelete(flow); }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+      {/* ACTIONS */}
+      <div className="flex gap-3 text-sm">
+        {/* EDIT */}
+        <button
+          className="text-blue-600 hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();   // ⛔ prevent card click
+            onEdit(flow);
+          }}
+        >
+          Edit
+        </button>
+
+        {/* COPY */}
+        <button
+          className="text-gray-600 hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDuplicate(flow);
+          }}
+        >
+          Copy
+        </button>
+
+        {/* DELETE */}
+        <button
+          className="text-red-600 hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(flow);
+          }}
+        >
+          Delete
+        </button>
+
+        {/* ENABLE / DISABLE */}
+        <button
+          className="text-orange-600 hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle(flow);
+          }}
+        >
+          {flow.is_active ? "Disable" : "Enable"}
+        </button>
+      </div>
+    </div>
+  </div>
+))}
+
         </div>
       )}
     </div>
   );
 };
+
 
 export default ChatBuilderAdmin;
