@@ -46,9 +46,9 @@ const AnalyticsPage = () => {
       setError(null);
 
       const [overviewRes, categoriesRes, hourlyRes] = await Promise.all([
-        http.get("/admin/analytics/overview"),
-        http.get("/admin/analytics/popular-categories"),
-        http.get("/admin/analytics/hourly-activity")
+        http.get("/api/admin/analytics/overview"),
+        http.get("/api/admin/analytics/popular-categories"),
+        http.get("/api/admin/analytics/hourly-activity")
       ]);
 
       const overviewData = overviewRes.data;

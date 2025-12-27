@@ -1,11 +1,10 @@
-const express = require("express");
-const router = express.Router();
-const db = require("../config/database");
+const db = require("../../config/database");
 
-// Get all department requests
-router.get("/requests", async (req, res) => {
-  const [rows] = await db.query(
-    `
+/* ----------------------------------------
+   Get all department requests
+----------------------------------------- */
+exports.getRequests = async (req, res) => {
+  const [rows] = await db.query(`
     SELECT 
       id,
       session_id,
@@ -17,25 +16,23 @@ router.get("/requests", async (req, res) => {
       updated_at
     FROM department_requests
     ORDER BY id DESC
-    `
-  );
+  `);
 
   return res.json({ success: true, requests: rows });
-});
+};
 
-// Mark request resolved
-// PUT /admin/departments/resolve/:id
-router.put("/resolve/:id", async (req, res) => {
+/* ----------------------------------------
+   Resolve department request
+----------------------------------------- */
+exports.resolveRequest = async (req, res) => {
   const id = req.params.id;
 
   try {
-    // 1) mark the department request resolved & set resolved time
     await db.query(
       "UPDATE department_requests SET status = 'resolved', updated_at = NOW() WHERE id = ?",
       [id]
     );
 
-    // 2) get the related session_id
     const [rows] = await db.query(
       "SELECT session_id FROM department_requests WHERE id = ?",
       [id]
@@ -44,22 +41,29 @@ router.put("/resolve/:id", async (req, res) => {
     if (rows.length > 0) {
       const sessionId = rows[0].session_id;
 
-      // 3) update chat_sessions status to 'resolved' (or 'closed' if you prefer)
       await db.query(
         "UPDATE chat_sessions SET status = 'resolved', updated_at = NOW() WHERE id = ?",
         [sessionId]
       );
     }
 
-    return res.json({ success: true, message: "Marked resolved and updated session status." });
+    return res.json({
+      success: true,
+      message: "Marked resolved and updated session status.",
+    });
   } catch (err) {
     console.error("Resolve error:", err);
-    return res.status(500).json({ success: false, message: "Failed to resolve request" });
+    return res.status(500).json({
+      success: false,
+      message: "Failed to resolve request",
+    });
   }
-});
-// GET FULL CHAT HISTORY FOR A SESSION
-// GET FULL CHAT HISTORY FOR A GIVEN SESSION
-router.get("/chat/:session_id", async (req, res) => {
+};
+
+/* ----------------------------------------
+   Get chat history for session
+----------------------------------------- */
+exports.getChatHistory = async (req, res) => {
   const sessionId = req.params.session_id;
 
   try {
@@ -67,9 +71,9 @@ router.get("/chat/:session_id", async (req, res) => {
       `
       SELECT 
         id,
-        message_type,      -- "user" or "bot"
-        content,           -- message text
-        step,              -- step key
+        message_type,
+        content,
+        step,
         created_at
       FROM chat_messages
       WHERE session_id = ?
@@ -81,10 +85,9 @@ router.get("/chat/:session_id", async (req, res) => {
     return res.json({ success: true, messages: rows });
   } catch (err) {
     console.error("Failed to load chat history", err);
-    return res.status(500).json({ success: false, message: "Failed to load chat history" });
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load chat history",
+    });
   }
-});
-
-
-
-module.exports = router;
+};

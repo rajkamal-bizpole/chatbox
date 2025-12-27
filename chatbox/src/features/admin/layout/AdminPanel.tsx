@@ -7,7 +7,7 @@ import UserManagement from '../users/UserManagement';
 import SupportTickets from '../tickets/pages/SupportTicketsPage';
 import type { AdminTab } from '../../../types/admin';
 import CustomerChats from '../chats/pages/CustomerChats';
-import ChatFlowManager from '../flows/ChatFlowManager';
+import ChatFlowManager from '../flows/pages/ChatBuilderAdmin';
 import DepartmentRequests from '../departments/pages/DepartmentRequestsPage';
 
 const AdminPanel: React.FC = () => {

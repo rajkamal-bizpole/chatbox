@@ -1,7 +1,6 @@
-const express = require("express");
-const router = express.Router();
-const db = require("../config/database"); // your MySQL connection
+const db = require("../../config/database");
 
+// Save department request
 async function saveDepartmentRequest(data) {
   const sql = `
     INSERT INTO department_requests 
@@ -19,9 +18,9 @@ async function saveDepartmentRequest(data) {
 }
 
 /* ------------------------------
-   BILLING DEPARTMENT
+   BILLING
 --------------------------------*/
-router.post("/billing", async (req, res) => {
+exports.billing = async (req, res) => {
   console.log("Billing Dept received:", req.body);
 
   const response = {
@@ -41,12 +40,12 @@ router.post("/billing", async (req, res) => {
   });
 
   return res.json(response);
-});
+};
 
 /* ------------------------------
    TECHNICAL SUPPORT
 --------------------------------*/
-router.post("/technical", async (req, res) => {
+exports.technical = async (req, res) => {
   console.log("Tech Dept received:", req.body);
 
   const response = {
@@ -66,12 +65,12 @@ router.post("/technical", async (req, res) => {
   });
 
   return res.json(response);
-});
+};
 
 /* ------------------------------
    ACCOUNTS
 --------------------------------*/
-router.post("/accounts", async (req, res) => {
+exports.accounts = async (req, res) => {
   console.log("Accounts Dept received:", req.body);
 
   const response = {
@@ -91,12 +90,12 @@ router.post("/accounts", async (req, res) => {
   });
 
   return res.json(response);
-});
+};
 
 /* ------------------------------
    COMPLIANCE
 --------------------------------*/
-router.post("/compliance", async (req, res) => {
+exports.compliance = async (req, res) => {
   console.log("Compliance Dept received:", req.body);
 
   const response = {
@@ -116,6 +115,4 @@ router.post("/compliance", async (req, res) => {
   });
 
   return res.json(response);
-});
-
-module.exports = router;
+};
