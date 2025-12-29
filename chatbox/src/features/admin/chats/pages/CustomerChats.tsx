@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  MessageSquare, 
+  
   Search, 
   UserCheck,
   UserX,
@@ -23,6 +23,9 @@ import type { ChatSession, Message, SupportTicket } from '../types/chat.type';
 
 import { useChatFilters } from '../hooks/useChatFilters';
 import ConversationModal from "../components/ConversationModal";
+
+import PageHeader from "../../../../common/components/header/PageHeader";
+import { MessageSquare, RefreshCw } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -170,35 +173,37 @@ const {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-white rounded-2xl shadow-sm border border-gray-100">
-              <MessageSquare className="text-[#e76458]" size={28} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Chat Support Admin</h1>
-              <p className="text-gray-600 mt-1">Monitor and manage customer chat sessions</p>
-            </div>
+<PageHeader
+  title="Chat Support Admin"
+  subtitle="Monitor and manage customer chat sessions"
+  rightContent={
+    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+      <div className="flex items-center gap-6">
+        <div className="text-center">
+          <div className="text-2xl font-bold text-gray-900">
+            {sessions.length}
           </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{sessions.length}</div>
-                  <div className="text-sm text-gray-500">Total Sessions</div>
-                </div>
-                <div className="h-8 w-px bg-gray-200"></div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {sessions.filter(s => s.status === 'active').length}
-                  </div>
-                  <div className="text-sm text-gray-500">Active</div>
-                </div>
-              </div>
-            </div>
+          <div className="text-sm text-gray-500">
+            Total Sessions
           </div>
         </div>
+
+        <div className="h-10 w-px bg-gray-200" />
+
+        <div className="text-center">
+          <div className="text-2xl font-bold text-green-600">
+            {sessions.filter(s => s.status === "active").length}
+          </div>
+          <div className="text-sm text-gray-500">
+            Active
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+/>
+
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-rows-1 md:grid-cols-4 gap-6 mb-8">

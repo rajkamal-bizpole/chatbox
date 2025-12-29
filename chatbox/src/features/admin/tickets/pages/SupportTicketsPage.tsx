@@ -1,11 +1,16 @@
 import React, { useState } from "react";
 import { useTickets } from "../hooks/useTickets";
-import TicketHeader from "../components/TicketHeader";
-import TicketStats from "../components/TicketStats";
-import TicketFilters from "../components/TicketFilters";
-import TicketsTable from "../components/TicketsTable";
+import PageHeader from "../../../../common/components/header/PageHeader";
+import { RefreshCw } from "lucide-react";
+
+import FilterBar from "../../../../common/components/filter/FilterBar";
+import Pagination from "../../../../common/components/pagination/Pagination"
 import TicketDetailsPanel from "../components/TicketDetailsPanel";
 import type { SupportTicket } from "../types/tickets.types";
+import DataTable from "../../../../common/components/table/DataTable";
+import { ticketColumns } from "../utils/columns";
+import StatsBar from "../../../../common/components/stats/StatsBar";
+import { buildTicketStats } from "../utils/stats";
 import {
   AlertCircle,
   Clock,
@@ -75,18 +80,26 @@ const formatDateTime = (date: string) =>
     minute: "2-digit",
   });
 const SupportTickets = () => {
-  const {
-    tickets,
-    filteredTickets,
-    paginatedTickets,
-    pagination,
-    setPagination,
-    setFilteredTickets,
-    loading,
-    error,
-    reload,
-    updateTicket,
-  } = useTickets();
+const {
+  tickets,
+  filteredTickets,
+  paginatedTickets,
+  pagination,
+  setPagination,
+
+  search,
+  setSearch,
+  status,
+  setStatus,
+  priority,
+  setPriority,
+
+  loading,
+  error,
+  reload,
+  updateTicket,
+} = useTickets();
+
 
   const [selectedTicket, setSelectedTicket] =
     useState<SupportTicket | null>(null);
@@ -96,39 +109,114 @@ const SupportTickets = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <TicketHeader onRefresh={reload} />
-
-      <TicketStats tickets={tickets} />
-
-      <TicketFilters
-        tickets={tickets}
-        onFilter={setFilteredTickets}
-      />
-
-      <div className="flex gap-6">
-   <TicketsTable
-  tickets={paginatedTickets}
-  pagination={pagination}
-  total={filteredTickets.length}
-  selectedId={selectedTicket?.id}
-  onSelect={setSelectedTicket}
-  setPagination={setPagination}
-  getPriorityBadgeClass={getPriorityBadgeClass}
-  getStatusBadgeClass={getStatusBadgeClass}
-  statusOptions={statusOptions}
-  formatDate={formatDate}
-  formatDateTime={formatDateTime}
+     <PageHeader
+  title="Support Tickets"
+  subtitle="Manage and track customer support requests"
+  actions={
+    <button
+      onClick={reload}
+      className="flex items-center gap-2 px-4 py-2 rounded-lg
+        border border-gray-300 text-sm font-medium text-gray-700
+        hover:bg-gray-50 transition"
+    >
+      <RefreshCw size={16} />
+      Refresh
+    </button>
+  }
 />
 
 
-        {selectedTicket && (
-          <TicketDetailsPanel
-            ticket={selectedTicket}
-            onClose={() => setSelectedTicket(null)}
-            onUpdate={updateTicket}
-          />
-        )}
-      </div>
+     <StatsBar items={buildTicketStats(tickets)} />
+
+
+   <FilterBar
+  filters={[
+    {
+      key: "search",
+      type: "search",
+      value: search,
+      placeholder: "Search ticket number or customer...",
+      onChange: setSearch,
+    },
+    {
+      key: "status",
+      type: "select",
+      value: status,
+      onChange: setStatus,
+      options: [
+        { label: "All Status", value: "all" },
+        { label: "Open", value: "open" },
+        { label: "In Progress", value: "in_progress" },
+        { label: "Resolved", value: "resolved" },
+        { label: "Closed", value: "closed" },
+      ],
+    },
+    {
+      key: "priority",
+      type: "select",
+      value: priority,
+      onChange: setPriority,
+      options: [
+        { label: "All Priority", value: "all" },
+        { label: "Low", value: "low" },
+        { label: "Medium", value: "medium" },
+        { label: "High", value: "high" },
+        { label: "Urgent", value: "urgent" },
+      ],
+    },
+  ]}
+  onReset={() => {
+    setSearch("");
+    setStatus("all");
+    setPriority("all");
+  }}
+/>
+
+
+<div className="flex gap-6">
+  {/* LEFT SIDE */}
+  <div className="flex-1 flex flex-col min-h-[600px]">
+  <DataTable
+  data={paginatedTickets}
+  columns={ticketColumns(
+    setSelectedTicket,
+    getPriorityBadgeClass,
+    getStatusBadgeClass,
+    statusOptions,
+    formatDate,
+    formatDateTime
+  )}
+  emptyMessage="No tickets found"
+  className="flex-1"
+  onRowClick={setSelectedTicket}
+  getRowClassName={ticket =>
+    ticket.id === selectedTicket?.id
+      ? "bg-blue-50"
+      : ""
+  }
+/>
+
+  <Pagination
+    page={pagination.page}
+    pageSize={pagination.pageSize}
+    total={filteredTickets.length}
+    onChange={page =>
+      setPagination(p => ({ ...p, page }))
+    }
+  />  
+ 
+  </div>
+
+  {/* RIGHT SIDE */}
+  {selectedTicket && (
+    <TicketDetailsPanel
+      ticket={selectedTicket}
+      onClose={() => setSelectedTicket(null)}
+      onUpdate={updateTicket}
+    />
+  )}
+</div>
+
     </div>
   );
 };
