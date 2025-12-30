@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import AdminSidebar from './AdminSidebar';
 import ChatAnalytics from '../analytics/ChatAnalytics';
 
-import UserManagement from '../users/UserManagement';
+import UserManagement from '../users/pages/UserManagementPage';
 import SupportTickets from '../tickets/pages/SupportTicketsPage';
 import type { AdminTab } from '../../../types/admin';
 import CustomerChats from '../chats/pages/CustomerChats';

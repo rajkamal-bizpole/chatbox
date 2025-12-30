@@ -16,4 +16,5 @@ export type FilterConfig<T = string> = {
  export interface FilterBarProps {
   filters: FilterConfig<any>[];
   onReset?: () => void;
+  
 }

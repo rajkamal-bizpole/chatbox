@@ -1,23 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { 
-  
-  Search, 
-  UserCheck,
-  UserX,
-Activity,
-MessageCircle,
-  Shield,
-  ChevronLeft,
-  ChevronRight,
-  CheckCircle
-} from 'lucide-react';
+
 import {
   getChatSessions,
   getChatSessionDetails,
 } from '../api/chat.api';
 
-import ChatSessionsTable from "../components/ChatSessionsTable";
+
 
 import type { ChatSession, Message, SupportTicket } from '../types/chat.type';
 
@@ -25,8 +14,13 @@ import { useChatFilters } from '../hooks/useChatFilters';
 import ConversationModal from "../components/ConversationModal";
 
 import PageHeader from "../../../../common/components/header/PageHeader";
-import { MessageSquare, RefreshCw } from "lucide-react";
-
+import { MessageSquare} from "lucide-react";
+import StatsBar from "../../../../common/components/stats/StatsBar";
+import { buildChatStats } from "../utils/stats";
+import FilterBar from "../../../../common/components/filter/FilterBar";
+import DataTable from "../../../../common/components/table/DataTable";
+import { chatColumns } from "../utils/chatColumns";
+import Pagination from "../../../../common/components/pagination/Pagination";
 const ITEMS_PER_PAGE = 10;
 
 const CustomerChats: React.FC = () => {
@@ -49,10 +43,11 @@ const {
   setCustomerTypeFilter,
   departmentFilter,
   setDepartmentFilter,
-  sortConfig,
-  handleSort,
   filteredAndSortedSessions,
 } = useChatFilters(sessions);
+useEffect(() => {
+  setCurrentPage(1);
+}, [searchTerm, statusFilter, customerTypeFilter, departmentFilter]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [isConversationModalOpen, setIsConversationModalOpen] = useState(false);
@@ -62,18 +57,20 @@ const {
     fetchSessions();
   }, []);
 
-  const fetchSessions = async () => {
-    try {
-        const response = await getChatSessions();
-      if (response.data.success) {
-        setSessions(response.data.sessions);
-      }
-    } catch (error) {
-      console.error('Failed to fetch sessions:', error);
-    } finally {
-      setLoading(false);
+const fetchSessions = async () => {
+  try {
+    setLoading(true);
+    const response = await getChatSessions();
+    if (response.data.success) {
+      setSessions(response.data.sessions);
     }
-  };
+  } catch (error) {
+    console.error("Failed to fetch sessions:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const fetchSessionDetails = async (sessionId: number) => {
     try {
@@ -102,61 +99,14 @@ const {
 
   
   // Pagination calculations
-  const totalPages = Math.ceil(filteredAndSortedSessions
-.length / ITEMS_PER_PAGE);
+
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedSessions = filteredAndSortedSessions
 .slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+ 
 
-  const renderPagination = () => {
-    if (totalPages <= 1) return null;
-
-    return (
-      <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-white">
-        <div className="text-sm text-gray-700">
-          Showing {startIndex + 1} to {Math.min(startIndex + ITEMS_PER_PAGE, filteredAndSortedSessions
-.length)} of{' '}
-          {filteredAndSortedSessions
-.length} results
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-            <button
-              key={page}
-              onClick={() => handlePageChange(page)}
-              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                currentPage === page
-                  ? 'bg-[#e76458] text-white'
-                  : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-          
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
-    );
-  };
+ 
 
   if (loading) {
     return (
@@ -171,7 +121,7 @@ const {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-5">
         {/* Header */}
 <PageHeader
   title="Chat Support Admin"
@@ -206,119 +156,61 @@ const {
 
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-rows-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Sessions</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {sessions.filter(s => s.status === 'active').length}
-                </p>
-              </div>
-              <Activity className="text-green-500" size={24} />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Escalated</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {sessions.filter(s => s.status === 'escalated').length}
-                </p>
-              </div>
-              <Shield className="text-yellow-500" size={24} />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Existing Customers</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {sessions.filter(s => s.is_existing_customer).length}
-                </p>
-              </div>
-              <UserCheck className="text-blue-500" size={24} />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">New Customers</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">
-                  {sessions.filter(s => !s.is_existing_customer).length}
-                </p>
-              </div>
-              <UserX className="text-gray-500" size={24} />
-            </div>
-          </div>
-        </div>
+       <StatsBar items={buildChatStats(sessions)} />
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search sessions by customer, phone, email, or ticket..."
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#e76458] focus:ring-2 focus:ring-[#e76458]/20 transition-all duration-200"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-              />
-            </div>
-            
-            <div className="flex gap-3">
-              <select
-                className="px-4 py-3 rounded-xl border border-gray-200 focus:border-[#e76458] focus:ring-2 focus:ring-[#e76458]/20 transition-all duration-200 bg-white"
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="escalated">Escalated</option>
-                <option value="completed">Completed</option>
-              </select>
-              
-              <select
-                className="px-4 py-3 rounded-xl border border-gray-200 focus:border-[#e76458] focus:ring-2 focus:ring-[#e76458]/20 transition-all duration-200 bg-white"
-                value={customerTypeFilter}
-                onChange={(e) => {
-                  setCustomerTypeFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="all">All Customers</option>
-                <option value="existing">Existing</option>
-                <option value="new">New</option>
-              </select>
-              <select
-  className="px-4 py-3 rounded-xl border border-gray-200 bg-white"
-  value={departmentFilter}
-  onChange={(e) => {
-    setDepartmentFilter(e.target.value);
-    setCurrentPage(1);
+     <FilterBar
+  filters={[
+    {
+      key: "search",
+      type: "search",
+      value: searchTerm,
+      placeholder: "Search customer, phone, email or ticket",
+      onChange: setSearchTerm,
+    },
+    {
+      key: "status",
+      type: "select",
+      value: statusFilter,
+      onChange: setStatusFilter,
+      options: [
+        { label: "All Status", value: "all" },
+        { label: "Active", value: "active" },
+        { label: "Escalated", value: "escalated" },
+        { label: "Completed", value: "completed" },
+      ],
+    },
+    {
+      key: "customerType",
+      type: "select",
+      value: customerTypeFilter,
+      onChange: setCustomerTypeFilter,
+      options: [
+        { label: "All Customers", value: "all" },
+        { label: "Existing", value: "existing" },
+        { label: "New", value: "new" },
+      ],
+    },
+    {
+      key: "department",
+      type: "select",
+      value: departmentFilter,
+      onChange: setDepartmentFilter,
+      options: [
+        { label: "All Departments", value: "all" },
+        { label: "Support", value: "support" },
+        { label: "Sales", value: "sales" },
+        { label: "Billing", value: "billing" },
+      ],
+    },
+  ]}
+  onReset={() => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setCustomerTypeFilter("all");
+    setDepartmentFilter("all");
   }}
->
-  <option value="all">All Departments</option>
-  <option value="support">Support</option>
-  <option value="sales">Sales</option>
-  <option value="billing">Billing</option>
-  <option value="technical">Technical</option>
-  <option value="unassigned">Unassigned</option>
-</select>
-
-            </div>
-          </div>
-        </div>
+/>
 
         {/* Sessions Table */}
   
@@ -331,18 +223,22 @@ const {
               <p className="text-gray-400 mt-2">Try adjusting your search or filters</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-             <ChatSessionsTable
-  sessions={paginatedSessions}
-  sortConfig={sortConfig}
-  onSort={handleSort}
-  onOpenConversation={openConversationModal}
+           
+<DataTable
+  data={paginatedSessions}
+  columns={chatColumns(openConversationModal)}
+  emptyMessage="No chat sessions found"
+  onRowClick={openConversationModal}
 />
-            </div>
+
           )}
           
-          {/* Pagination */}
-          {renderPagination()}
+      <Pagination
+  page={currentPage}
+  pageSize={ITEMS_PER_PAGE}
+  total={filteredAndSortedSessions.length}
+  onChange={setCurrentPage}
+/>
         </div>
 
         {/* Conversation Modal */}

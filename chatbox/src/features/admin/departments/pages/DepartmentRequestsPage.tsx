@@ -3,14 +3,17 @@ import React from "react";
 import { useDepartmentRequests } from "../hooks/useDepartmentRequests";
 import { useDepartmentFilters } from "../hooks/useDepartmentFilters";
 
-import DepartmentStats from "../components/DepartmentStats";
-import DepartmentFilters from "../components/DepartmentFilters";
+
+
 import DepartmentRequestCard from "../components/DepartmentRequestCard";
-import DepartmentPagination from "../components/DepartmentPagination";
+
 import DepartmentChatModal from "../components/DepartmentChatModal";
-
+import PageHeader from "../../../../common/components/header/PageHeader";
 import { RefreshCw, FileText } from "lucide-react";
-
+import StatsBar from "../../../../common/components/stats/StatsBar";
+import { buildDepartmentStats } from "../utils/stats";
+import FilterBar from "../../../../common/components/filter/FilterBar";
+import Pagination from "../../../../common/components/pagination/Pagination";
 const DepartmentRequestsPage: React.FC = () => {
   const dept = useDepartmentRequests();
   const filters = useDepartmentFilters(dept.requests);
@@ -30,30 +33,57 @@ const DepartmentRequestsPage: React.FC = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-          <div className="p-2 bg-[#e76458] rounded-lg">
-            <FileText className="text-white" size={22} />
-          </div>
-          Department Requests
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Monitor and manage department assistance requests
-        </p>
-      </div>
+   
+   <PageHeader
+  title="Department Requests"
+  subtitle="Monitor and manage department assistance requests"
+
+  actions={
+    <button
+      onClick={dept.loadRequests}
+      className="flex items-center gap-2 px-4 py-2
+        border border-gray-300 rounded-lg text-sm
+        hover:bg-gray-50"
+    >
+      <RefreshCw size={16} />
+      Refresh
+    </button>
+  }
+/>
 
       {/* Stats */}
-      <DepartmentStats requests={dept.requests} />
+      <StatsBar items={buildDepartmentStats(dept.requests)} />
+
 
       {/* Filters */}
 
 
 
-<DepartmentFilters
-  searchQuery={filters.search}
-  setSearchQuery={filters.setSearch}
-  statusFilter={filters.status}
-  setStatusFilter={filters.setStatus}
+<FilterBar
+  filters={[
+    {
+      key: "search",
+      type: "search",
+      value: filters.search,
+      placeholder: "Search by department or message",
+      onChange: filters.setSearch,
+    },
+    {
+      key: "status",
+      type: "select",
+      value: filters.status,
+      onChange: filters.setStatus,
+      options: [
+        { label: "All Status", value: "all" },
+        { label: "Investigating", value: "investigating" },
+        { label: "Resolved", value: "resolved" },
+      ],
+    },
+  ]}
+  onReset={() => {
+    filters.setSearch("");
+    filters.setStatus("all");
+  }}
 />
 
 
@@ -92,12 +122,11 @@ const DepartmentRequestsPage: React.FC = () => {
         onClose={dept.closeChat}
       />
 
-      <DepartmentPagination
-  currentPage={filters.currentPage}
-  totalPages={filters.totalPages}
-  totalItems={filters.filtered.length}
+ <Pagination
+  page={filters.currentPage}
   pageSize={filters.pageSize}
-  setPage={filters.setCurrentPage}
+  total={filters.filtered.length}
+  onChange={filters.setCurrentPage}
 />
     </div>
   );
