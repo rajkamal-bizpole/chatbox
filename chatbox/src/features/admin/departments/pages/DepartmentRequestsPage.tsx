@@ -6,7 +6,8 @@ import { useDepartmentFilters } from "../hooks/useDepartmentFilters";
 
 
 import DepartmentRequestCard from "../components/DepartmentRequestCard";
-
+ import { Activity
+} from "lucide-react";
 import DepartmentChatModal from "../components/DepartmentChatModal";
 import PageHeader from "../../../../common/components/header/PageHeader";
 import { RefreshCw, FileText } from "lucide-react";
@@ -39,15 +40,13 @@ const DepartmentRequestsPage: React.FC = () => {
   subtitle="Monitor and manage department assistance requests"
 
   actions={
-    <button
-      onClick={dept.loadRequests}
-      className="flex items-center gap-2 px-4 py-2
-        border border-gray-300 rounded-lg text-sm
-        hover:bg-gray-50"
-    >
-      <RefreshCw size={16} />
-      Refresh
-    </button>
+  <button
+            onClick={dept.loadRequests}
+            className="px-4 py-2 bg-gradient-to-r from-[#e76458] to-[#f09188] text-white rounded-lg flex items-center gap-2 hover:opacity-90"
+          >
+            <Activity size={18} />
+            Refresh 
+          </button>
   }
 />
 

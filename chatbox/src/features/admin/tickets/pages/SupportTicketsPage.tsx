@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useTickets } from "../hooks/useTickets";
 import PageHeader from "../../../../common/components/header/PageHeader";
 import { RefreshCw } from "lucide-react";
-
+ import { Activity
+} from "lucide-react";
 import FilterBar from "../../../../common/components/filter/FilterBar";
 import Pagination from "../../../../common/components/pagination/Pagination"
 import TicketDetailsPanel from "../components/TicketDetailsPanel";
@@ -114,14 +115,12 @@ const {
   subtitle="Manage and track customer support requests"
   actions={
     <button
-      onClick={reload}
-      className="flex items-center gap-2 px-4 py-2 rounded-lg
-        border border-gray-300 text-sm font-medium text-gray-700
-        hover:bg-gray-50 transition"
-    >
-      <RefreshCw size={16} />
-      Refresh
-    </button>
+            onClick={reload}
+            className="px-4 py-2 bg-gradient-to-r from-[#e76458] to-[#f09188] text-white rounded-lg flex items-center gap-2 hover:opacity-90"
+          >
+            <Activity size={18} />
+            Refresh 
+          </button>
   }
 />
 

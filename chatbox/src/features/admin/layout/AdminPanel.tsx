@@ -1,7 +1,7 @@
 // admin/components/AdminPanel.tsx
 import React, { useEffect, useState } from 'react';
 import AdminSidebar from './AdminSidebar';
-import ChatAnalytics from '../analytics/ChatAnalytics';
+import ChatAnalytics from '../analytics/pages/AnalyticsPage';
 
 import UserManagement from '../users/pages/UserManagementPage';
 import SupportTickets from '../tickets/pages/SupportTicketsPage';
