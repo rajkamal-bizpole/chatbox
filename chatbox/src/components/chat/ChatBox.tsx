@@ -19,7 +19,6 @@ const ChatBox: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [chatSession, setChatSession] = useState<ChatSession | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -29,7 +28,11 @@ const [hasUserInteracted, setHasUserInteracted] = useState(false);
     scrollToBottom();
   }, [messages]);
 
-
+  useEffect(() => {
+    if (isOpen) {
+      initializeChat();
+    }
+  }, [isOpen]);
 
   // Load active chat flow from backend
  // In ChatBox.tsx - Update the loadActiveFlow function
@@ -43,19 +46,10 @@ const loadActiveFlow = async () => {
     
     // Find and set initial step
     const initialStep = response.data.steps.find((step: ChatStep) => step.is_initial);
-   if (initialStep) {
-  setCurrentStep(initialStep);
-
-  // ✅ ADD INITIAL MESSAGE ONLY ONCE
-  if (messages.length === 0) {
-    addBotMessage(
-      initialStep.message_text,
-      initialStep.options,
-      initialStep.step_type
-    );
-  }
-}
-
+    if (initialStep) {
+      setCurrentStep(initialStep);
+      addBotMessage(initialStep.message_text, initialStep.options, initialStep.step_type);
+    }
   } catch (error) {
     console.error('Failed to load active flow:', error);
     setError('Failed to load chat service. Please try again later.');
@@ -92,8 +86,8 @@ const loadActiveFlow = async () => {
 
 // In ChatBox.tsx - Update the saveMessageToBackend function
 const saveMessageToBackend = async (message: Omit<Message, 'id' | 'timestamp'>, stepKey: string) => {
-   if (!chatSession || !hasUserInteracted) {
-    console.log("⛔ Skipping save — no user interaction yet");
+  if (!chatSession) {
+    console.log('❌ No chat session available for saving message');
     return;
   }
 
@@ -176,33 +170,28 @@ const executeApiCall = async (step: ChatStep, userInput: string) => {
 
 
 const addBotMessage = async (text: string, options?: string[], stepType?: string) => {
-  const isOptionStep = stepType === "options" || stepType === "api_call";
+  const isOptionStep = (stepType === 'options' || stepType === 'api_call');
 
   const newMessage: Message = {
     id: Date.now().toString(),
     text,
-    sender: "bot",
+    sender: 'bot',
     timestamp: new Date(),
-    type: isOptionStep ? "option" : "message",
-    options,
+    type: isOptionStep ? 'option' : 'message',
+    options
   };
 
   setMessages(prev => [...prev, newMessage]);
 
-  // 🚨 DO NOT SAVE BOT MESSAGE UNTIL USER INTERACTS
-  if (currentStep && hasUserInteracted) {
-    await saveMessageToBackend(
-      {
-        text,
-        sender: "bot",
-        type: newMessage.type,
-        options,
-      },
-      currentStep.step_key
-    );
+  if (currentStep) {
+    await saveMessageToBackend({
+      text,
+      sender: 'bot',
+      type: isOptionStep ? 'option' : 'message',
+      options
+    }, currentStep.step_key);
   }
 };
-
 
 
   const addUserMessage = async (text: string) => {
@@ -216,7 +205,7 @@ const addBotMessage = async (text: string, options?: string[], stepType?: string
     setMessages(prev => [...prev, newMessage]);
 
     // Save to backend if we have a current step
-    if (currentStep && hasUserInteracted) {
+    if (currentStep) {
       await saveMessageToBackend({
         text,
         sender: 'user',
@@ -243,9 +232,7 @@ const handleOptionClick = async (option: string) => {
     console.log('❌ No current step or flow available');
     return;
   }
-  if (!hasUserInteracted) {
-    setHasUserInteracted(true);
-  }
+
   console.log('🔍 handleOptionClick DETAILED:', {
     currentStepKey: currentStep.step_key,
     currentStepType: currentStep.step_type,
@@ -353,9 +340,7 @@ const handleSendMessage = async () => {
   if (!inputValue.trim() || !currentStep) return;
 
   const text = inputValue.trim();
-  if (!hasUserInteracted) {
-    setHasUserInteracted(true);
-  }
+
   // Input is saved same as option click
   await handleOptionClick(text);
 
