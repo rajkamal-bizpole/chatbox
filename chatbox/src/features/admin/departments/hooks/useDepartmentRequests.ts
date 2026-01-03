@@ -26,10 +26,31 @@ export const useDepartmentRequests = () => {
     setResolvingId(null);
   };
 
-  const loadChat = async (sessionId: number) => {
+const loadChat = async (sessionId: number) => {
+  try {
     const res = await getDepartmentChat(sessionId);
-    if (res.data.success) setSelectedChat(res.data.messages);
-  };
+
+    if (res.data.success) {
+      const normalized = res.data.messages.map((m: any) => ({
+        role:
+          m.sender === "user" ||
+          m.message_type === "user" ||
+          m.from === "customer"
+            ? "user"
+            : "bot",
+
+        text: m.text || m.content || m.message || "",
+        timestamp: m.timestamp || m.created_at,
+      }));
+
+      setSelectedChat(normalized);
+    }
+  } catch (error) {
+    console.error("Failed to load department chat", error);
+  }
+};
+;
+
 
   useEffect(() => {
     loadRequests();

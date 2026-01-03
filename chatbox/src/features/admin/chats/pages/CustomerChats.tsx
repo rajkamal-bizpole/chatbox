@@ -7,11 +7,12 @@ import {
 } from '../api/chat.api';
 
 
-
+import type { ChatUIMessage } from "../../../../common/types/chat-ui.types";
 import type { ChatSession, Message, SupportTicket } from '../types/chat.type';
 
 import { useChatFilters } from '../hooks/useChatFilters';
-import ConversationModal from "../components/ConversationModal";
+
+import ChatModalBase from "../../../../common/components/chatModel/ChatModalBase";
 
 import PageHeader from "../../../../common/components/header/PageHeader";
 import { MessageSquare} from "lucide-react";
@@ -26,10 +27,11 @@ const ITEMS_PER_PAGE = 10;
 const CustomerChats: React.FC = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<ChatSession | null>(null);
-  const [sessionDetails, setSessionDetails] = useState<{
-    messages: Message[];
-    tickets: SupportTicket[];
-  } | null>(null);
+const [sessionDetails, setSessionDetails] = useState<{
+  messages: ChatUIMessage[];
+  tickets: SupportTicket[];
+} | null>(null);
+
   const [loading, setLoading] = useState(true);
 
 
@@ -71,19 +73,28 @@ const fetchSessions = async () => {
   }
 };
 
+const fetchSessionDetails = async (sessionId: number) => {
+  try {
+    const response = await getChatSessionDetails(sessionId);
 
-  const fetchSessionDetails = async (sessionId: number) => {
-    try {
-      const response = await getChatSessionDetails(sessionId);
+    if (response.data.success) {
+      const normalizedMessages: ChatUIMessage[] =
+        response.data.messages.map((m: any) => ({
+          role: m.message_type === "user" ? "user" : "bot",
+          text: m.content,
+          timestamp: m.created_at,
+          meta: m.step,
+        }));
 
-      if (response.data.success) {
-        setSessionDetails(response.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch session details:', error);
+      setSessionDetails({
+        messages: normalizedMessages,
+        tickets: response.data.tickets,
+      });
     }
-  };
-
+  } catch (error) {
+    console.error("Failed to fetch session details:", error);
+  }
+};
   const openConversationModal = async (session: ChatSession) => {
     setSelectedSession(session);
     setIsConversationModalOpen(true);
@@ -242,12 +253,40 @@ const fetchSessions = async () => {
         </div>
 
         {/* Conversation Modal */}
-        <ConversationModal
+ <ChatModalBase
   open={isConversationModalOpen}
-  session={selectedSession}
-  sessionDetails={sessionDetails}
+  title={`Conversation with ${
+    selectedSession?.customer_name ||
+    selectedSession?.phone ||
+    "Anonymous User"
+  }`}
+  subtitle={`Status: ${selectedSession?.status}`}
+  messages={sessionDetails?.messages ?? null}
   onClose={closeConversationModal}
+  footer={
+    sessionDetails?.tickets.length ? (
+      <div className="p-4 bg-gray-50 border-t">
+        <h3 className="font-semibold mb-3">
+          Support Tickets ({sessionDetails.tickets.length})
+        </h3>
+        <div className="grid gap-2 max-h-40 overflow-y-auto">
+          {sessionDetails.tickets.map((t) => (
+            <div
+              key={t.id}
+              className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm"
+            >
+              <div className="font-medium">{t.ticket_number}</div>
+              <div className="text-yellow-700">
+                {t.issue_type} – {t.sub_issue}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    ) : null
+  }
 />
+
 
       </div>
    

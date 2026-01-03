@@ -8,7 +8,8 @@ import { useDepartmentFilters } from "../hooks/useDepartmentFilters";
 import DepartmentRequestCard from "../components/DepartmentRequestCard";
  import { Activity
 } from "lucide-react";
-import DepartmentChatModal from "../components/DepartmentChatModal";
+
+import ChatModalBase from "../../../../common/components/chatModel/ChatModalBase"
 import PageHeader from "../../../../common/components/header/PageHeader";
 import { RefreshCw, FileText } from "lucide-react";
 import StatsBar from "../../../../common/components/stats/StatsBar";
@@ -116,10 +117,15 @@ const DepartmentRequestsPage: React.FC = () => {
 
 
       {/* Chat Modal */}
-      <DepartmentChatModal
-        chat={dept.selectedChat}
-        onClose={dept.closeChat}
-      />
+<ChatModalBase
+  open={!!dept.selectedChat}
+  title="Department Conversation"
+  subtitle={`${dept.selectedChat?.length ?? 0} messages`}
+  messages={dept.selectedChat}
+  onClose={dept.closeChat}
+/>
+
+
 
  <Pagination
   page={filters.currentPage}
